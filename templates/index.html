@@ -316,7 +316,7 @@
                 <img src="{{ url_for('static', filename='images/fypfixer_logo.png') }}" alt="FYPFixer">
                 <span>FYPFixer</span>
             </div>
-            <button class="lang-switcher" onclick="toggleLang()">EN / RU / ES</button>
+            <button class="lang-switcher" onclick="toggleLang()" id="lang-btn">🌐 EN</button>
         </div>
 
         <div class="hero">
@@ -405,8 +405,19 @@
             window.location.href = `/?lang=${nextLang}`;
         }
 
+        function updateLangButton() {
+            const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+            const langNames = {
+                'en': '🌐 EN',
+                'ru': '🌐 RU',
+                'es': '🌐 ES'
+            };
+            document.getElementById('lang-btn').textContent = langNames[currentLang];
+        }
+
         loadPlan();
         loadHashtagCount();
+        updateLangButton();
     </script>
 </body>
 </html>
