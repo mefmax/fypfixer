@@ -373,21 +373,23 @@
 
     <script>
         // Load plan from API
-        function loadPlan(goal = 'Train your FYP') {
-            fetch('/api/plan')
-                .then(response => response.json())
-                .then(data => {
-                    let planHTML = `<div class="plan-header">${data.goal} (${data.total_time})</div>`;
-                    data.steps.forEach(step => {
-                        planHTML += `<div class="plan-step"><strong>${step.num}.</strong> ${step.action} <em>${step.time}</em></div>`;
-                    });
-                    document.getElementById('plan').innerHTML = planHTML;
-                })
-                .catch(err => {
-                    console.error('Error loading plan:', err);
-                    document.getElementById('plan').innerHTML = '<div style="color: #808080; font-size: 13px;">Error loading plan</div>';
-                });
-        }
+        function loadPlan(goal = 'default') {
+    const url = `/api/plan?goal=${encodeURIComponent(goal)}`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let planHTML = `<div class="plan-header">${data.goal} (${data.total_time})</div>`;
+            data.steps.forEach(step => {
+                planHTML += `<div class="plan-step"><strong>${step.num}.</strong> ${step.action} <em>${step.time}</em></div>`;
+            });
+            document.getElementById('plan').innerHTML = planHTML;
+        })
+        .catch(err => {
+            console.error('Error loading plan:', err);
+            document.getElementById('plan').innerHTML = '<div style="color: #808080; font-size: 13px;">Error loading plan</div>';
+        });
+}
+
 
         // Generate plan on button click
         function generatePlan() {
