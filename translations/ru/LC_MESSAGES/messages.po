@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-12-06 21:28+0300\n"
-"PO-Revision-Date: 2025-12-06 21:29+0300\n"
+"POT-Creation-Date: 2025-12-06 21:38\n"
+"PO-Revision-Date: 2025-12-06 21:40\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
 "Language-Team: ru <LL@li.org>\n"
@@ -19,3 +19,54 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
+#: templates/index.html:337
+msgid "Tame Your Feed"
+msgstr "Укроти свою ленту"
+
+#: templates/index.html:338
+msgid "Get a daily plan to fix your TikTok For You page."
+msgstr "Получи ежедневный план для идеального FYP в TikTok."
+
+#: templates/index.html:346
+msgid "What do you want to see?"
+msgstr "Что ты хочешь видеть?"
+
+#: templates/index.html:350
+msgid "Get Plan"
+msgstr "Получить план"
+
+#: templates/index.html:355
+msgid "Safe:"
+msgstr "Безопасно:"
+
+#: templates/index.html:355
+msgid "We never log in, use bots, or auto-like. Just a simple checklist for you."
+msgstr "Мы никогда не логинимся, не используем ботов, не жмём авто-лайки. Просто чек-лист для тебя."
+
+#: templates/index.html:359
+msgid "Today's Steps"
+msgstr "Сегодняшние шаги"
+
+#: templates/index.html:361
+msgid "Enter your goal above"
+msgstr "Введи свою цель выше"
+
+#: templates/index.html:366
+msgid "Loading"
+msgstr "Загрузка"
+
+#: templates/index.html:366
+msgid "trending hashtags tracked"
+msgstr "трендовых хэштегов отслеживается"
+
+#: templates/index.html:371
+msgid "Made with ❤️ for TikTok creators"
+msgstr "Сделано с ❤️ для TikTok-создателей"
+
+#: templates/index.html:371
+msgid "Privacy"
+msgstr "Конфиденциальность"
+
+#: templates/index.html:371
+msgid "Terms"
+msgstr "Условия"

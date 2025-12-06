@@ -31,7 +31,6 @@
             flex-direction: column;
         }
 
-        /* Header */
         .header {
             display: flex;
             align-items: center;
@@ -73,7 +72,6 @@
             color: #FF2D55;
         }
 
-        /* Hero Section */
         .hero {
             display: flex;
             flex-direction: column;
@@ -99,7 +97,6 @@
             line-height: 1.4;
         }
 
-        /* CTA Form */
         .cta-form {
             display: flex;
             flex-direction: column;
@@ -161,7 +158,6 @@
             transform: translateY(0);
         }
 
-        /* Compact Disclaimer */
         .disclaimer-compact {
             background: rgba(255, 45, 85, 0.08);
             border: 1px solid rgba(255, 45, 85, 0.15);
@@ -178,7 +174,6 @@
             color: #FF2D55;
         }
 
-        /* Plan Section */
         .plan-section {
             background: rgba(255, 255, 255, 0.05);
             padding: 16px;
@@ -232,7 +227,6 @@
             margin-left: 4px;
         }
 
-        /* Stats */
         .stats {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 45, 85, 0.1);
@@ -248,7 +242,6 @@
             color: #e0e0e0;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
             padding: 16px 0;
@@ -266,7 +259,6 @@
             text-decoration: underline;
         }
 
-        /* Responsive tweaks for very small screens */
         @media (max-width: 375px) {
             .container {
                 padding: 12px;
@@ -319,79 +311,69 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div class="logo">
                 <img src="{{ url_for('static', filename='images/fypfixer_logo.png') }}" alt="FYPFixer">
                 <span>FYPFixer</span>
             </div>
-            <button class="lang-switcher" onclick="toggleLang()">EN / RU</button>
+            <button class="lang-switcher" onclick="toggleLang()">EN / RU / ES</button>
         </div>
 
-        <!-- Hero Section -->
         <div class="hero">
-            <h1>Tame Your Feed</h1>
-            <p>Get a daily plan to fix your TikTok For You page.</p>
+            <h1>{{ _('Tame Your Feed') }}</h1>
+            <p>{{ _('Get a daily plan to fix your TikTok For You page.') }}</p>
         </div>
 
-        <!-- CTA Form -->
         <div class="cta-form">
             <div class="form-group">
                 <input 
                     type="text" 
                     id="goal-input" 
-                    placeholder="What do you want to see?" 
+                    placeholder="{{ _('What do you want to see?') }}" 
                     onkeypress="handleKeyPress(event)"
                 >
-                <button onclick="generatePlan()">Get Plan</button>
+                <button onclick="generatePlan()">{{ _('Get Plan') }}</button>
             </div>
         </div>
 
-        <!-- Compact Disclaimer -->
         <div class="disclaimer-compact">
-            <strong>🛡️ Safe:</strong> We never log in, use bots, or auto-like. Just a simple checklist for you.
+            <strong>🛡️ {{ _('Safe:') }}</strong> {{ _('We never log in, use bots, or auto-like. Just a simple checklist for you.') }}
         </div>
 
-        <!-- Plan Section -->
         <div class="plan-section">
-            <h3>📋 Today's Steps</h3>
+            <h3>{{ _("Today's Steps") }}</h3>
             <div id="plan">
-                <div style="color: #808080; font-size: 13px;">Enter your goal above</div>
+                <div style="color: #808080; font-size: 13px;">{{ _('Enter your goal above') }}</div>
             </div>
         </div>
 
-        <!-- Stats -->
         <div class="stats">
-            📊 <strong id="hashtag-count">Loading</strong> trending hashtags tracked
+            📊 <strong id="hashtag-count">{{ _('Loading') }}</strong> {{ _('trending hashtags tracked') }}
         </div>
     </div>
 
-    <!-- Footer -->
     <div class="footer">
-        <p>Made with ❤️ for TikTok creators • <a href="#">Privacy</a> • <a href="#">Terms</a></p>
+        <p>{{ _('Made with ❤️ for TikTok creators') }} • <a href="#">{{ _('Privacy') }}</a> • <a href="#">{{ _('Terms') }}</a></p>
     </div>
 
     <script>
-        // Load plan from API
         function loadPlan(goal = 'default') {
-    const url = `/api/plan?goal=${encodeURIComponent(goal)}`;
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            let planHTML = `<div class="plan-header">${data.goal} (${data.total_time})</div>`;
-            data.steps.forEach(step => {
-                planHTML += `<div class="plan-step"><strong>${step.num}.</strong> ${step.action} <em>${step.time}</em></div>`;
-            });
-            document.getElementById('plan').innerHTML = planHTML;
-        })
-        .catch(err => {
-            console.error('Error loading plan:', err);
-            document.getElementById('plan').innerHTML = '<div style="color: #808080; font-size: 13px;">Error loading plan</div>';
-        });
-}
+            const url = `/api/plan?goal=${encodeURIComponent(goal)}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let planHTML = `<div class="plan-header">${data.goal} (${data.total_time})</div>`;
+                    data.steps.forEach(step => {
+                        planHTML += `<div class="plan-step"><strong>${step.num}.</strong> ${step.action} <em>${step.time}</em></div>`;
+                    });
+                    document.getElementById('plan').innerHTML = planHTML;
+                })
+                .catch(err => {
+                    console.error('Error loading plan:', err);
+                    document.getElementById('plan').innerHTML = '<div style="color: #808080; font-size: 13px;">Error loading plan</div>';
+                });
+        }
 
-
-        // Generate plan on button click
         function generatePlan() {
             const goal = document.getElementById('goal-input').value.trim();
             if (goal) {
@@ -399,30 +381,30 @@
             }
         }
 
-        // Handle Enter key
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 generatePlan();
             }
         }
 
-        // Load hashtags count
         function loadHashtagCount() {
             fetch('/api/hashtags')
                 .then(response => response.json())
                 .then(data => {
-                    const count = data.hashtags ? data.hashtags.length : 0;
+                    const count = data.total || 0;
                     document.getElementById('hashtag-count').textContent = count;
                 })
                 .catch(err => console.error('Error loading hashtag count:', err));
         }
 
-        // Language toggle (basic)
         function toggleLang() {
-            alert('Language switching coming soon!');
+            const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+            const langs = ['en', 'ru', 'es'];
+            const currentIndex = langs.indexOf(currentLang);
+            const nextLang = langs[(currentIndex + 1) % langs.length];
+            window.location.href = `/?lang=${nextLang}`;
         }
 
-        // Load on page start
         loadPlan();
         loadHashtagCount();
     </script>

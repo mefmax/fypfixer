@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-12-06 21:28+0300\n"
+"POT-Creation-Date: 2025-12-06 21:38+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,4 +16,56 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
+
+#: templates/index.html:323
+msgid "Tame Your Feed"
+msgstr ""
+
+#: templates/index.html:324
+msgid "Get a daily plan to fix your TikTok For You page."
+msgstr ""
+
+#: templates/index.html:332
+msgid "What do you want to see?"
+msgstr ""
+
+#: templates/index.html:335
+msgid "Get Plan"
+msgstr ""
+
+#: templates/index.html:340
+msgid "Safe:"
+msgstr ""
+
+#: templates/index.html:340
+msgid "We never log in, use bots, or auto-like. Just a simple checklist for you."
+msgstr ""
+
+#: templates/index.html:344
+msgid "Today's Steps"
+msgstr ""
+
+#: templates/index.html:346
+msgid "Enter your goal above"
+msgstr ""
+
+#: templates/index.html:351
+msgid "Loading"
+msgstr ""
+
+#: templates/index.html:351
+msgid "trending hashtags tracked"
+msgstr ""
+
+#: templates/index.html:356
+msgid "Made with ❤️ for TikTok creators"
+msgstr ""
+
+#: templates/index.html:356
+msgid "Privacy"
+msgstr ""
+
+#: templates/index.html:356
+msgid "Terms"
+msgstr ""
 

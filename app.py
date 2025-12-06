@@ -1,10 +1,14 @@
 import subprocess
 from flask import Flask, render_template, jsonify, request
 from flask_babel import Babel, gettext, lazy_gettext
-
 import json
 import os
 from collections import Counter
+
+def get_locale():
+    # Получаем язык из query-параметра или из браузера
+    return request.args.get('lang') or request.accept_languages.best_match(['en', 'ru', 'es']) or 'en'
+
 
 app = Flask(__name__)
 GOAL_CATEGORIES = {
@@ -50,6 +54,10 @@ GOAL_CATEGORIES = {
     }
 }
 
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = 'translations'
+babel = Babel(app, locale_selector=get_locale)
+
 def detect_category(goal_text):
     """Detect category from user goal"""
     goal_lower = goal_text.lower()
@@ -80,6 +88,11 @@ def run_scraper():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.context_processor
+def inject_gettext():
+    return dict(_=gettext)
+
 
 @app.route('/api/plan', methods=['GET', 'POST'])
 def get_plan():

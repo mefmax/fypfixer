@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-12-06 21:28+0300\n"
-"PO-Revision-Date: 2025-12-06 21:30+0300\n"
+"POT-Creation-Date: 2025-12-06 21:38\n"
+"PO-Revision-Date: 2025-12-06 21:41\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
@@ -18,3 +18,54 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
+#: templates/index.html:337
+msgid "Tame Your Feed"
+msgstr "Domina tu Feed"
+
+#: templates/index.html:338
+msgid "Get a daily plan to fix your TikTok For You page."
+msgstr "Obtén un plan diario para arreglar tu página Para Ti de TikTok."
+
+#: templates/index.html:346
+msgid "What do you want to see?"
+msgstr "¿Qué quieres ver?"
+
+#: templates/index.html:350
+msgid "Get Plan"
+msgstr "Obtener Plan"
+
+#: templates/index.html:355
+msgid "Safe:"
+msgstr "Seguro:"
+
+#: templates/index.html:355
+msgid "We never log in, use bots, or auto-like. Just a simple checklist for you."
+msgstr "Nunca iniciamos sesión, usamos bots o damos me gusta automáticamente. Solo una lista simple para ti."
+
+#: templates/index.html:359
+msgid "Today's Steps"
+msgstr "Pasos de Hoy"
+
+#: templates/index.html:361
+msgid "Enter your goal above"
+msgstr "Introduce tu objetivo arriba"
+
+#: templates/index.html:366
+msgid "Loading"
+msgstr "Cargando"
+
+#: templates/index.html:366
+msgid "trending hashtags tracked"
+msgstr "hashtags de tendencia rastreados"
+
+#: templates/index.html:371
+msgid "Made with ❤️ for TikTok creators"
+msgstr "Hecho con ❤️ para creadores de TikTok"
+
+#: templates/index.html:371
+msgid "Privacy"
+msgstr "Privacidad"
+
+#: templates/index.html:371
+msgid "Terms"
+msgstr "Términos"
