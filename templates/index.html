@@ -3,8 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FYPFixer MVP - Tame Your TikTok Feed</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
+    <title>FYPFixer - Tame Your TikTok Feed</title>
+    
+    <!-- Favicon для всех устройств -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
+    
+    <!-- Open Graph для соцсетей -->
+    <meta property="og:title" content="FYPFixer - Tame Your TikTok Feed">
+    <meta property="og:description" content="Get a daily plan to fix your TikTok For You page">
+    <meta property="og:image" content="{{ url_for('static', filename='images/fypfixer_logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="FYPFixer">
+    <meta name="twitter:description" content="Tame your TikTok feed">
+    
     <style>
         * {
             margin: 0;
