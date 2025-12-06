@@ -1,6 +1,6 @@
 import subprocess
-from flask import Flask, render_template, jsonify
-from flask import request
+from flask import Flask, render_template, jsonify, request
+from flask_babel import Babel, gettext, lazy_gettext
 
 import json
 import os
