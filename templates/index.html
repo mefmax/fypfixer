@@ -259,6 +259,29 @@
             text-decoration: underline;
         }
 
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 45, 85, 0.95);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         @media (max-width: 375px) {
             .container {
                 padding: 12px;
@@ -282,6 +305,12 @@
 
             .logo {
                 font-size: 16px;
+            }
+
+            .toast {
+                right: 10px;
+                left: 10px;
+                top: 10px;
             }
         }
 
@@ -356,6 +385,9 @@
         <p>{{ _('Made with ❤️ for TikTok creators') }} • <a href="#">{{ _('Privacy') }}</a> • <a href="#">{{ _('Terms') }}</a></p>
     </div>
 
+    <!-- Toast container -->
+    <div id="toast" class="toast"></div>
+
     <script>
         function loadPlan(goal = 'default') {
             const url = `/api/plan?goal=${encodeURIComponent(goal)}`;
@@ -397,12 +429,34 @@
                 .catch(err => console.error('Error loading hashtag count:', err));
         }
 
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
         function toggleLang() {
             const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
             const langs = ['en', 'ru', 'es'];
+            const langMessages = {
+                'en': '🌐 Language changed to English',
+                'ru': '🌐 Язык изменён на русский',
+                'es': '🌐 Idioma cambiado a español'
+            };
             const currentIndex = langs.indexOf(currentLang);
             const nextLang = langs[(currentIndex + 1) % langs.length];
-            window.location.href = `/?lang=${nextLang}`;
+            
+            // Показываем тост с сообщением о смене языка
+            showToast(langMessages[nextLang]);
+            
+            // Переходим на новый язык через 300мс
+            setTimeout(() => {
+                window.location.href = `/?lang=${nextLang}`;
+            }, 300);
         }
 
         function updateLangButton() {
