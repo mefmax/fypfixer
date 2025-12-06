@@ -1,1 +1,0 @@
-print("✅ FYPFixer environment is ready!")
