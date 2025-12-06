@@ -405,8 +405,13 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        function getCurrentLang() {
+            return new URLSearchParams(window.location.search).get('lang') || 'en';
+        }
+
         function loadPlan(goal = 'default') {
-            const url = `/api/plan?goal=${encodeURIComponent(goal)}`;
+            const currentLang = getCurrentLang();
+            const url = `/api/plan?goal=${encodeURIComponent(goal)}&lang=${currentLang}`;
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -456,7 +461,7 @@
         }
 
         function toggleLang() {
-            const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+            const currentLang = getCurrentLang();
             const langs = ['en', 'ru', 'es'];
             const langMessages = {
                 'en': '🌐 Language changed to English',
@@ -476,7 +481,7 @@
         }
 
         function updateLangButton() {
-            const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+            const currentLang = getCurrentLang();
             const langNames = {
                 'en': '🌐 EN',
                 'ru': '🌐 RU',
