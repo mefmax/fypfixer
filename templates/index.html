@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FYPFixer MVP - Tame Your TikTok Feed</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1a2e 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0 16px 0;
+            border-bottom: 1px solid rgba(255, 45, 85, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+        }
+
+        .logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .lang-switcher {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            color: #e0e0e0;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .lang-switcher:hover {
+            background: rgba(255, 45, 85, 0.15);
+            border-color: #FF2D55;
+            color: #FF2D55;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: white;
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 14px;
+            color: #b0b0b0;
+            line-height: 1.4;
+        }
+
+        /* CTA Form */
+        .cta-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-group input {
+            flex: 1;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .form-group input::placeholder {
+            color: #808080;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #FF2D55;
+            box-shadow: 0 0 0 3px rgba(255, 45, 85, 0.2);
+        }
+
+        .form-group button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(255, 45, 85, 0.3);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 45, 85, 0.4);
+        }
+
+        .form-group button:active {
+            transform: translateY(0);
+        }
+
+        /* Compact Disclaimer */
+        .disclaimer-compact {
+            background: rgba(255, 45, 85, 0.08);
+            border: 1px solid rgba(255, 45, 85, 0.15);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #b0b0b0;
+            text-align: center;
+            line-height: 1.4;
+            margin-bottom: 30px;
+        }
+
+        .disclaimer-compact strong {
+            color: #FF2D55;
+        }
+
+        /* Plan Section */
+        .plan-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 45, 85, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 24px;
+        }
+
+        .plan-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+        }
+
+        #plan {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .plan-header {
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 13px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 45, 85, 0.1);
+        }
+
+        .plan-step {
+            padding: 10px;
+            background: rgba(255, 45, 85, 0.08);
+            border-radius: 8px;
+            border-left: 3px solid #FF2D55;
+            font-size: 13px;
+            color: #d0d0d0;
+        }
+
+        .plan-step strong {
+            color: #FF2D55;
+        }
+
+        .plan-step em {
+            color: #909090;
+            font-style: normal;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        /* Stats */
+        .stats {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 45, 85, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #b0b0b0;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .stats strong {
+            color: #e0e0e0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 16px 0;
+            border-top: 1px solid rgba(255, 45, 85, 0.1);
+            color: #808080;
+            font-size: 11px;
+        }
+
+        .footer a {
+            color: #FF2D55;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive tweaks for very small screens */
+        @media (max-width: 375px) {
+            .container {
+                padding: 12px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .hero p {
+                font-size: 13px;
+            }
+
+            .form-group {
+                flex-direction: column;
+            }
+
+            .form-group button {
+                width: 100%;
+            }
+
+            .logo {
+                font-size: 16px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .container {
+                padding: 24px;
+                gap: 20px;
+            }
+
+            .hero h1 {
+                font-size: 40px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .form-group {
+                gap: 12px;
+            }
+
+            .form-group button {
+                padding: 14px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='images/fypfixer_logo.png') }}" alt="FYPFixer">
+                <span>FYPFixer</span>
+            </div>
+            <button class="lang-switcher" onclick="toggleLang()">EN / RU</button>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Tame Your Feed</h1>
+            <p>Get a daily plan to fix your TikTok For You page.</p>
+        </div>
+
+        <!-- CTA Form -->
+        <div class="cta-form">
+            <div class="form-group">
+                <input 
+                    type="text" 
+                    id="goal-input" 
+                    placeholder="What do you want to see?" 
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button onclick="generatePlan()">Get Plan</button>
+            </div>
+        </div>
+
+        <!-- Compact Disclaimer -->
+        <div class="disclaimer-compact">
+            <strong>🛡️ Safe:</strong> We never log in, use bots, or auto-like. Just a simple checklist for you.
+        </div>
+
+        <!-- Plan Section -->
+        <div class="plan-section">
+            <h3>📋 Today's Steps</h3>
+            <div id="plan">
+                <div style="color: #808080; font-size: 13px;">Enter your goal above</div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            📊 <strong id="hashtag-count">Loading</strong> trending hashtags tracked
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Made with ❤️ for TikTok creators • <a href="#">Privacy</a> • <a href="#">Terms</a></p>
+    </div>
+
+    <script>
+        // Load plan from API
+        function loadPlan(goal = 'Train your FYP') {
+            fetch('/api/plan')
+                .then(response => response.json())
+                .then(data => {
+                    let planHTML = `<div class="plan-header">${data.goal} (${data.total_time})</div>`;
+                    data.steps.forEach(step => {
+                        planHTML += `<div class="plan-step"><strong>${step.num}.</strong> ${step.action} <em>${step.time}</em></div>`;
+                    });
+                    document.getElementById('plan').innerHTML = planHTML;
+                })
+                .catch(err => {
+                    console.error('Error loading plan:', err);
+                    document.getElementById('plan').innerHTML = '<div style="color: #808080; font-size: 13px;">Error loading plan</div>';
+                });
+        }
+
+        // Generate plan on button click
+        function generatePlan() {
+            const goal = document.getElementById('goal-input').value.trim();
+            if (goal) {
+                loadPlan(goal);
+            }
+        }
+
+        // Handle Enter key
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                generatePlan();
+            }
+        }
+
+        // Load hashtags count
+        function loadHashtagCount() {
+            fetch('/api/hashtags')
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.hashtags ? data.hashtags.length : 0;
+                    document.getElementById('hashtag-count').textContent = count;
+                })
+                .catch(err => console.error('Error loading hashtag count:', err));
+        }
+
+        // Language toggle (basic)
+        function toggleLang() {
+            alert('Language switching coming soon!');
+        }
+
+        // Load on page start
+        loadPlan();
+        loadHashtagCount();
+    </script>
+</body>
+</html>
