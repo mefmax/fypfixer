@@ -1,0 +1,32 @@
+﻿services:
+  web:
+    build: .
+    container_name: fypfixer-web
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:16
+    container_name: fypfixer-postgres
+    environment:
+      POSTGRES_DB: fypfixer
+      POSTGRES_USER: fypfixer
+      POSTGRES_PASSWORD: fypfixer
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    container_name: fypfixer-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
