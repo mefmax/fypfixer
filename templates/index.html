@@ -2,25 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FYPFixer - Tame Your TikTok Feed</title>
-    
-    <!-- Favicon для всех устройств -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
-    
-    <!-- Open Graph для соцсетей -->
-    <meta property="og:title" content="FYPFixer - Tame Your TikTok Feed">
-    <meta property="og:description" content="Get a daily plan to fix your TikTok For You page">
-    <meta property="og:image" content="{{ url_for('static', filename='images/fypfixer_logo.png', _external=True) }}">
-    <meta property="og:type" content="website">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="FYPFixer">
-    <meta name="twitter:description" content="Tame your TikTok feed">
-    
+
     <style>
         * {
             margin: 0;
@@ -34,30 +19,27 @@
             color: #e0e0e0;
             line-height: 1.6;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
             padding: 16px;
-            width: 100%;
             display: flex;
             flex-direction: column;
+            gap: 16px;
+            padding-bottom: 120px;
         }
 
         .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 0 16px 0;
-            border-bottom: 1px solid rgba(255, 45, 85, 0.1);
-            margin-bottom: 20px;
+            padding: 12px 0;
         }
 
         .logo {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -66,9 +48,9 @@
         }
 
         .logo img {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
         }
 
         .lang-switcher {
@@ -85,277 +67,374 @@
         .lang-switcher:hover {
             background: rgba(255, 45, 85, 0.15);
             border-color: #FF2D55;
-            color: #FF2D55;
         }
 
         .hero {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            text-align: center;
-            margin-bottom: 24px;
+            gap: 8px;
         }
 
         .hero h1 {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: white;
+            font-size: 24px;
             background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin: 0;
+            line-height: 1.2;
         }
 
         .hero p {
-            font-size: 14px;
+            font-size: 13px;
             color: #b0b0b0;
-            line-height: 1.4;
+            margin: 0;
         }
 
-        .cta-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-
-        .form-group {
+        .category-group {
             display: flex;
             gap: 8px;
+            margin: 8px 0;
         }
 
-        .form-group input {
+        .category-input {
             flex: 1;
-            padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 45, 85, 0.2);
-            border-radius: 10px;
-            font-size: 14px;
-            color: white;
-            transition: all 0.2s;
-        }
-
-        .form-group input::placeholder {
-            color: #808080;
-        }
-
-        .form-group input:focus {
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
             outline: none;
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #FF2D55;
-            box-shadow: 0 0 0 3px rgba(255, 45, 85, 0.2);
+            position: relative;
         }
 
-        .form-group button {
-            padding: 12px 20px;
+        .category-input::placeholder {
+            color: #707070;
+        }
+
+        .category-input:focus {
+            border-color: #FF2D55;
+            background: rgba(255, 45, 85, 0.1);
+        }
+
+        .category-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            list-style: none;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .category-suggestions li {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+        }
+
+        .category-suggestions li:hover {
+            background: rgba(255, 45, 85, 0.2);
+        }
+
+        .btn-primary {
             background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .disclaimer {
+            background: rgba(255, 45, 85, 0.15);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #d0d0d0;
+            line-height: 1.4;
+        }
+
+        .disclaimer strong {
+            color: #FF2D55;
+        }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .video-section h2 {
             font-size: 14px;
             font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .video-card {
+            background: radial-gradient(circle at top left, rgba(255, 45, 85, 0.3), rgba(10, 14, 39, 0.9));
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 45, 85, 0.4);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .video-card:active {
+            transform: scale(0.98);
+        }
+
+        .video-thumb {
+            position: relative;
+            width: 100%;
+            padding-top: 70%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .video-thumb::after {
+            content: "▶";
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .video-meta {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .video-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+        }
+
+        .video-creator {
+            font-size: 11px;
+            color: #b0b0b0;
+            margin: 0;
+        }
+
+        .video-reason {
+            font-size: 10px;
+            color: #909090;
+            margin-top: 4px;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(10, 14, 39, 0.98);
+            border-top: 1px solid rgba(255, 45, 85, 0.1);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
             cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(255, 45, 85, 0.3);
             min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .form-group button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 45, 85, 0.4);
+        .btn-open {
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            color: #fff;
         }
 
-        .form-group button:active {
-            transform: translateY(0);
+        .btn-open:active {
+            transform: scale(0.96);
         }
 
-        .disclaimer-compact {
-            background: rgba(255, 45, 85, 0.08);
-            border: 1px solid rgba(255, 45, 85, 0.15);
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            color: #b0b0b0;
-            text-align: center;
-            line-height: 1.4;
-            margin-bottom: 30px;
+        .btn-next {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
-        .disclaimer-compact strong {
-            color: #FF2D55;
+        .btn-next:active {
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .plan-section {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 45, 85, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            margin-bottom: 24px;
+            margin-top: 16px;
         }
 
-        .plan-section h3 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .plan-section h2 {
+            font-size: 14px;
+            font-weight: 600;
             color: white;
+            margin-bottom: 10px;
         }
 
-        #plan {
+        .steps {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .plan-header {
-            font-weight: 600;
-            color: #e0e0e0;
-            font-size: 13px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 45, 85, 0.1);
-        }
-
-        .plan-step {
-            padding: 10px;
-            background: rgba(255, 45, 85, 0.08);
-            border-radius: 8px;
-            border-left: 3px solid #FF2D55;
-            font-size: 13px;
-            color: #d0d0d0;
-        }
-
-        .plan-step strong {
-            color: #FF2D55;
-        }
-
-        .plan-step em {
-            color: #909090;
-            font-style: normal;
-            font-size: 12px;
-            margin-left: 4px;
-        }
-
-        .stats {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 45, 85, 0.1);
+        .step {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 45, 85, 0.15);
             padding: 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            color: #b0b0b0;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-
-        .stats strong {
-            color: #e0e0e0;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 16px 0;
-            border-top: 1px solid rgba(255, 45, 85, 0.1);
-            color: #808080;
-            font-size: 11px;
-        }
-
-        .footer a {
-            color: #FF2D55;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 45, 85, 0.95);
-            color: white;
-            padding: 12px 20px;
             border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .step-title {
             font-size: 13px;
             font-weight: 600;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: all 0.3s ease;
+            color: white;
+            margin: 0;
+        }
+
+        .step-desc {
+            font-size: 11px;
+            color: #b0b0b0;
+            margin: 4px 0 0 0;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
         }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
+        .modal-overlay.active {
+            display: flex;
         }
 
-        @media (max-width: 375px) {
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 90vh;
+            max-height: 800px;
+            background: black;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (min-width: 768px) {
             .container {
-                padding: 12px;
+                padding: 40px 24px;
+                padding-bottom: 40px;
             }
 
-            .hero h1 {
-                font-size: 28px;
-            }
-
-            .hero p {
-                font-size: 13px;
-            }
-
-            .form-group {
+            .action-buttons {
+                position: relative;
                 flex-direction: column;
-            }
-
-            .form-group button {
-                width: 100%;
-            }
-
-            .logo {
-                font-size: 16px;
-            }
-
-            .toast {
-                right: 10px;
-                left: 10px;
-                top: 10px;
-            }
-        }
-
-        @media (min-width: 600px) {
-            .container {
                 padding: 24px;
-                gap: 20px;
             }
 
             .hero h1 {
-                font-size: 40px;
+                font-size: 32px;
             }
 
             .hero p {
-                font-size: 16px;
+                font-size: 15px;
             }
 
-            .form-group {
-                gap: 12px;
-            }
-
-            .form-group button {
-                padding: 14px 24px;
+            .video-thumb {
+                padding-top: 100%;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- HEADER -->
         <div class="header">
             <div class="logo">
                 <img src="{{ url_for('static', filename='images/fypfixer_logo.png') }}" alt="FYPFixer">
@@ -364,120 +443,176 @@
             <button class="lang-switcher" onclick="toggleLang()" id="lang-btn">🌐 EN</button>
         </div>
 
+        <!-- HERO -->
         <div class="hero">
             <h1>{{ _('Tame Your Feed') }}</h1>
             <p>{{ _('Get a daily plan to fix your TikTok For You page.') }}</p>
         </div>
 
-        <div class="cta-form">
-            <div class="form-group">
-                <input 
-                    type="text" 
-                    id="goal-input" 
-                    placeholder="{{ _('What do you want to see?') }}" 
-                    onkeypress="handleKeyPress(event)"
-                >
-                <button onclick="generatePlan()">{{ _('Get Plan') }}</button>
+        <!-- CATEGORY SELECT -->
+        <div class="category-group">
+            <input 
+                type="text" 
+                class="category-input" 
+                id="category-input" 
+                placeholder="{{ _('personal_growth, fitness, education...') }}"
+                autocomplete="off"
+            >
+            <button class="btn-primary" onclick="getPlan()">{{ _('Get Plan') }}</button>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disclaimer">
+            🛡️ <strong>{{ _('Safe:') }}</strong> {{ _('We never log in, use bots, or auto-like. Just a simple checklist for you.') }}
+        </div>
+
+        <!-- TODAY'S VIDEO -->
+        <div class="video-section">
+            <h2>{{ _("Today's Video") }}</h2>
+            <div id="video-card-container">
+                <div style="color: #808080; font-size: 13px; text-align: center; padding: 40px 20px;">
+                    {{ _('Loading your first video...') }}
+                </div>
             </div>
         </div>
 
-        <div class="disclaimer-compact">
-            <strong>🛡️ {{ _('Safe:') }}</strong> {{ _('We never log in, use bots, or auto-like. Just a simple checklist for you.') }}
-        </div>
-
-        <div class="plan-section">
-            <h3>{{ _("Today's Steps") }}</h3>
-            <div id="plan">
-                <div style="color: #808080; font-size: 13px;">{{ _('Enter your goal above') }}</div>
-            </div>
-        </div>
-
-        <div class="stats">
-            📊 <strong id="hashtag-count">{{ _('Loading') }}</strong> {{ _('trending hashtags tracked') }}
+        <!-- PLAN STEPS -->
+        <div class="plan-section" id="plan-section" style="display:none;">
+            <h2>{{ _('Your Plan') }}</h2>
+            <div class="steps" id="steps-container"></div>
         </div>
     </div>
 
-    <div class="footer">
-        <p>{{ _('Made with ❤️ for TikTok creators') }} • <a href="#">{{ _('Privacy') }}</a> • <a href="#">{{ _('Terms') }}</a></p>
+    <!-- ACTION BUTTONS (FIXED) -->
+    <div class="action-buttons">
+        <button class="btn-action btn-open" onclick="openInTikTok()" id="btn-open-tiktok">
+            {{ _('Open in TikTok') }}
+        </button>
+        <button class="btn-action btn-next" onclick="nextVideo()">
+            {{ _('Next Video') }}
+        </button>
     </div>
 
-    <!-- Toast container -->
-    <div id="toast" class="toast"></div>
+    <!-- MODAL OVERLAY -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <iframe id="modal-iframe" class="modal-iframe" src=""></iframe>
+        </div>
+    </div>
 
     <script>
+        const POPULAR_CATEGORIES = ['personal_growth', 'fitness', 'education', 'entertainment'];
+
         function getCurrentLang() {
             return new URLSearchParams(window.location.search).get('lang') || 'en';
         }
 
-        function loadPlan(goal = 'default') {
+        let currentItems = [];
+        let currentIndex = 0;
+        let currentVideoUrl = '';
+        let planData = null;
+
+        function fetchVideoPlan(category = 'personal_growth') {
             const currentLang = getCurrentLang();
-            const url = `/api/plan?goal=${encodeURIComponent(goal)}&lang=${currentLang}`;
+            const url = `/api/plan?lang=${encodeURIComponent(currentLang)}&category=${encodeURIComponent(category)}`;
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    let planHTML = `<div class="plan-header">${data.goal} (${data.total_time})</div>`;
-                    data.steps.forEach(step => {
-                        planHTML += `<div class="plan-step"><strong>${step.num}.</strong> ${step.action} <em>${step.time}</em></div>`;
-                    });
-                    document.getElementById('plan').innerHTML = planHTML;
+                    planData = data;
+                    if (!data.steps || !data.steps.length || !data.steps[0].items || !data.steps[0].items.length) {
+                        document.getElementById('video-card-container').innerHTML =
+                            '<div style="color: #808080; font-size: 13px;">{{ _("No videos in the plan yet") }}</div>';
+                        return;
+                    }
+                    currentItems = data.steps[0].items;
+                    currentIndex = 0;
+                    renderCurrentVideo();
+                    renderPlan(data);
                 })
                 .catch(err => {
                     console.error('Error loading plan:', err);
-                    document.getElementById('plan').innerHTML = '<div style="color: #808080; font-size: 13px;">Error loading plan</div>';
                 });
         }
 
-        function generatePlan() {
-            const goal = document.getElementById('goal-input').value.trim();
-            if (goal) {
-                loadPlan(goal);
-            }
+        function renderCurrentVideo() {
+            if (!currentItems.length) return;
+            const item = currentItems[currentIndex];
+            const container = document.getElementById('video-card-container');
+
+            const safeTitle = item.title || 'TikTok video';
+            const safeCreator = item.creator || '@creator';
+            const safeReason = item.reason || '';
+            const thumb = item.thumbnail_url || '{{ url_for("static", filename="images/fypfixer_logo2.png") }}';
+            currentVideoUrl = item.video_url || '';
+
+            container.innerHTML = `
+                <div class="video-card" onclick="openInTikTok()">
+                    <div class="video-thumb" style="background-image: url('${thumb}');"></div>
+                    <div class="video-meta">
+                        <div class="video-title">${safeTitle}</div>
+                        <div class="video-creator">${safeCreator}</div>
+                        ${safeReason ? `<div class="video-reason">${safeReason}</div>` : ''}
+                    </div>
+                </div>
+            `;
         }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                generatePlan();
-            }
-        }
-
-        function loadHashtagCount() {
-            fetch('/api/hashtags')
-                .then(response => response.json())
-                .then(data => {
-                    const count = data.total || 0;
-                    document.getElementById('hashtag-count').textContent = count;
-                })
-                .catch(err => console.error('Error loading hashtag count:', err));
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
+        function renderPlan(data) {
+            const planSection = document.getElementById('plan-section');
+            const stepsContainer = document.getElementById('steps-container');
             
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000);
+            if (!data.steps || !data.steps.length) return;
+            
+            stepsContainer.innerHTML = data.steps.map((step, idx) => `
+                <div class="step">
+                    <div class="step-number">${idx + 1}</div>
+                    <div class="step-title">${step.title}</div>
+                    ${step.description ? `<div class="step-desc">${step.description}</div>` : ''}
+                </div>
+            `).join('');
+            
+            planSection.style.display = 'block';
+        }
+
+        function openInTikTok() {
+            if (!currentVideoUrl) return;
+            
+            // Открываем в modal (WebView на мобиле)
+            const modal = document.getElementById('modal-overlay');
+            const iframe = document.getElementById('modal-iframe');
+            
+            // Используем TikTok URL напрямую
+            iframe.src = currentVideoUrl;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-overlay');
+            const iframe = document.getElementById('modal-iframe');
+            modal.classList.remove('active');
+            iframe.src = '';
+        }
+
+        function nextVideo() {
+            if (!currentItems.length) return;
+            currentIndex = (currentIndex + 1) % currentItems.length;
+            renderCurrentVideo();
+        }
+
+        function getPlan() {
+            const category = document.getElementById('category-input').value.trim() || 'personal_growth';
+            if (category) {
+                fetchVideoPlan(category);
+            }
         }
 
         function toggleLang() {
             const currentLang = getCurrentLang();
             const langs = ['en', 'ru', 'es'];
-            const langMessages = {
-                'en': '🌐 Language changed to English',
-                'ru': '🌐 Язык изменён на русский',
-                'es': '🌐 Idioma cambiado a español'
-            };
             const currentIndex = langs.indexOf(currentLang);
             const nextLang = langs[(currentIndex + 1) % langs.length];
-            
-            // Показываем тост с сообщением о смене языка
-            showToast(langMessages[nextLang]);
-            
-            // Переходим на новый язык через 300мс
-            setTimeout(() => {
-                window.location.href = `/?lang=${nextLang}`;
-            }, 300);
+            window.location.href = `/?lang=${nextLang}`;
         }
 
         function updateLangButton() {
@@ -490,8 +625,14 @@
             document.getElementById('lang-btn').textContent = langNames[currentLang];
         }
 
-        loadPlan();
-        loadHashtagCount();
+        // Закрывай modal при клике вне
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-overlay') {
+                closeModal();
+            }
+        });
+
+        fetchVideoPlan();
         updateLangButton();
     </script>
 </body>

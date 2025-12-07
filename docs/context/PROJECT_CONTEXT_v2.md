@@ -1,10 +1,7 @@
-FYPFixer – Project Context Snapshot v2 (2025‑12‑07, 13:55 MSK)
-1. Purpose & Vision (Updated)
-Идея (эволюция):
-
-v1 (исходная): FYPFixer помогает пользователю "приручить" TikTok‑ленту через чек‑листы советов.
-
-v2 (текущая, правильная): FYPFixer — это AI‑помощник, который генерирует конкретные действия с готовыми ссылками на видео. Пользователь только жмёт кнопки; FYPFixer — мозг, пользователь — руки.
+FYPFixer – Project Context Snapshot v3 (2025‑12‑07, 18:14 MSK)
+1. Purpose & Vision (Final)
+Идея:
+FYPFixer — это AI‑помощник, который генерирует ежедневные конкретные действия с готовыми ссылками на TikTok видео. Пользователь только жмёт кнопки; FYPFixer — мозг, пользователь — руки.
 
 Миссия:
 
@@ -18,12 +15,12 @@ Give users simple, AI-powered daily checklists with concrete TikTok video links.
 
 Международная аудитория (EN основной, RU/ES локализованы).
 
-2. Target Audience (Finalized)
+2. Target Audience (Final)
 Primary ЦА: Вариант A
 
 Демография: 18–35 лет, пользователи TikTok.
 
-Психография: хотят "чистый, качественный контент без мусора", но не готовы сами искать и анализировать.
+Психография: хотят "чистый, качественный контент без мусора".
 
 Боль: мусор в FYP, потеря времени на поиск, информационный хаос.
 
@@ -40,78 +37,100 @@ Primary ЦА: Вариант A
 6	science_tech	Science & Technology	Наука и Технология	Ciencia y Tecnología	TRUE
 7	food	Food & Cooking	Еда и Кулинария	Comida y Cocina	TRUE
 8	travel	Travel & Adventure	Путешествия и Приключения	Viajes y Aventura	TRUE
-3. Product Values & Principles (Updated)
+3. Product Values & Principles
 Safety & Compliance: Only public TikTok videos, no account access, transparent scraping.
 
 Simplicity: User taps button → action completed (watch, like, block, follow, search).
 
 Concrete Value: Not advice, but ready-to-use actions with video links.
 
-AI-Powered: LLM + Vector DB generates recommendations, not manual templates.
+AI‑Powered: LLM + Vector DB generates recommendations, not manual templates.
 
-Engagement Over Friction: Minimize user thinking; maximize button-tapping.
+Engagement Over Friction: Minimize user thinking; maximize button‑tapping.
 
-4. Current Product State (MVP v2)
-Implemented:
+4. Current Product State (MVP v2, Actual Status)
+✅ Implemented (Session 1 complete):
 
 Landing page (Flask + Jinja2, 3 languages EN/RU/ES).
 
-/api/health — health check with DB connectivity.
+/api/health — health check with DB connectivity (✓ working).
 
-/api/plan — returns plan with 5 steps, but steps still contain generic advice, not video links yet.
+/api/plan — returns plan with steps and items[] containing concrete TikTok video links (✓ working).
 
-Categories table in PostgreSQL with is_premium flag (8 base categories seeded).
+Each item: video_url, title, creator, thumbnail_url, reason.
 
-Docker Compose infrastructure (web, Postgres 16, Redis 7).
+Demo plan with 3 mock videos for testing (✓ in DB).
 
-What's missing for v2:
+Categories table with is_premium flag (8 base categories seeded) (✓ working).
 
-TikTok video scraper (Firecrawl or similar).
+Docker Compose infrastructure (web, Postgres 16, Redis 7) (✓ working).
 
-step_items table (video links + metadata for each step).
+SQLAlchemy models: Category, PlanStep, StepItem with relations (✓ defined).
 
-trending_videos table (cache of public trending videos).
+Status: MVP v2 backend is ALIVE. /api/plan already returns video items, not generic advice.
 
-user_actions table (tracking: user watched/liked/blocked video).
+🔄 In Progress / To Do:
 
-AI layer (LLM generates: "pick 5 videos for step X").
+UI layer: Frontend components to display video cards from items[].
 
-Vector DB (Qdrant) for similarity search of videos.
+TikTok real video scraper (currently: mock data).
 
-UI component to display videos and track completion.
+trending_videos table (cache of public trending videos per category).
 
-5. Tech Stack (Target, refined)
+user_actions table (tracking: watched/liked/blocked/followed).
+
+AI recommendation engine (LLM + Qdrant).
+
+Premium/free tier logic (restrict is_premium categories).
+
+Progress tracking & analytics.
+
+5. Tech Stack (Target, Refined)
 Backend
 
-Python 3.11 + Flask + Flask-SQLAlchemy.
+Python 3.11 + Flask + Flask‑SQLAlchemy.
 
-REST API (/api/plan, /api/plan/{id}/step, /api/plan/{id}/complete-step, /api/recommendations).
+REST API (/api/plan, /api/plan/{id}/step, /api/plan/{id}/complete-action, /api/recommendations).
 
-Flask-Babel for i18n (UI + Plan content).
+Flask‑Babel for i18n (UI + Plan content).
 
 Database
 
-PostgreSQL 16 (users, categories, plans, plan_steps, step_items, trending_videos, user_actions).
+PostgreSQL 16:
 
-Redis 7 (cache trending videos, session tokens, rate limits).
+users (client_id, language).
+
+categories (code, names_en/ru/es, is_premium).
+
+plans (user_id, category_id, plan_date, language, is_template, title).
+
+plan_steps (plan_id, step_order, action_type, text_en/ru/es).
+
+step_items (NEW) (plan_step_id, video_id, creator_username, title, thumbnail_url, video_url, engagement_score, reason_text).
+
+trending_videos (planned: category cache).
+
+user_actions (planned: tracking).
+
+Redis 7 (cache, sessions, rate limits).
 
 AI & Data
 
-TikTok Scraper: Firecrawl.dev or Apify for public trending videos (parse hashtags, metadata).
+TikTok Scraper: Firecrawl.dev or manual parsing (planned, currently mock).
 
 LLM: Ollama (local, llama3) or OpenAI (fallback/premium).
 
-Vector DB: Qdrant — embed and store videos; query by semantic similarity.
+Vector DB: Qdrant — embed videos, semantic search.
 
-Data Pipeline: Scheduled job (n8n or cron) to update trending_videos table every 1–6 hours per category.
+Data Pipeline: n8n or cron job for trending videos refresh.
 
 Frontend
 
-Flask templates + vanilla JS + CSS (mobile-first, dark theme).
+Flask templates + vanilla JS + CSS (mobile‑first, dark theme).
 
-PWA approach (offline support, installable).
+PWA approach (offline, installable).
 
-Progressive disclosure: free users see 2 videos/step, premium see 5–7.
+Video card components (thumbnail, title, creator, action buttons).
 
 Infrastructure
 
@@ -121,100 +140,87 @@ Production: Hetzner / DigitalOcean + Kubernetes (later).
 
 Observability: Prometheus, Grafana, Loki, Sentry.
 
-Backups: Daily Postgres snapshots to S3-compatible storage.
+Backups: Daily Postgres snapshots to S3‑compatible storage.
 
-6. High-Level Architecture (C4 Overview, Updated)
-Level 1 — System Context
-
-FYPFixer: generates daily checklists with concrete TikTok video actions.
-
-TikTok User / Premium User / Admin interact with FYPFixer.
-
-TikTok Platform: source of video data (scraping public content).
-
-Payment Provider (Stripe): handles premium billing.
-
-Email Service: sends notifications.
-
-Level 2 — Containers (Key Update)
-
-Web App (Flask): serve HTML, static files, user interface.
-
-API (Flask REST): /api/plan, /api/plan/{id}/step, /api/recommendations.
-
-AI Orchestrator (n8n): workflow for video recommendation generation (input: category + language → output: 5 videos + reasons).
-
-TikTok Scraper (scheduled job): fetch trending videos, enrich metadata, store in trending_videos table.
-
-Data Layer: PostgreSQL, Redis.
-
-Vector DB (Qdrant): semantic search for videos.
-
-Observability: Prometheus, Grafana, Loki, Sentry.
-
-Ingress: Nginx (SSL, rate limiting).
-
-Level 3 — Components (Detailed later)
-
-7. Database Schema (v2, Updated)
-Existing tables:
-
-users (client_id, language, created_at, updated_at).
-
-categories (code, name_en/ru/es, is_premium).
-
-plans (user_id, category_id, plan_date, language, is_template, title).
-
-plan_steps (plan_id, step_order, action_type, text_en/ru/es).
-
-NEW tables (for video links):
+6. Database Schema (v3, Current State)
+Created tables:
 
 sql
-step_items (
+-- users
+CREATE TABLE users (
   id BIGSERIAL PRIMARY KEY,
-  plan_step_id BIGINT FK plans_steps.id,
-  video_id VARCHAR(256), -- TikTok video ID
+  client_id VARCHAR(64) UNIQUE NOT NULL,
+  language VARCHAR(5) NOT NULL DEFAULT 'en',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- categories
+CREATE TABLE categories (
+  id BIGSERIAL PRIMARY KEY,
+  code VARCHAR(32) UNIQUE NOT NULL,
+  name_en TEXT NOT NULL,
+  name_ru TEXT,
+  name_es TEXT,
+  is_premium BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- plans
+CREATE TABLE plans (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  category_id BIGINT REFERENCES categories(id),
+  plan_date DATE NOT NULL,
+  language VARCHAR(5) NOT NULL DEFAULT 'en',
+  is_template BOOLEAN NOT NULL DEFAULT FALSE,
+  title TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, plan_date, language)
+);
+
+-- plan_steps
+CREATE TABLE plan_steps (
+  id BIGSERIAL PRIMARY KEY,
+  plan_id BIGINT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+  step_order INT NOT NULL,
+  action_type VARCHAR(32),
+  text_en TEXT NOT NULL,
+  text_ru TEXT,
+  text_es TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- step_items (NEW!)
+CREATE TABLE step_items (
+  id BIGSERIAL PRIMARY KEY,
+  plan_step_id BIGINT NOT NULL REFERENCES plan_steps(id) ON DELETE CASCADE,
+  video_id VARCHAR(256),
   creator_username VARCHAR(256),
   title TEXT,
   thumbnail_url TEXT,
-  video_url TEXT,
-  engagement_score FLOAT, -- likes/views ratio for ranking
-  reason_text TEXT, -- "High engagement, matches your niche"
-  created_at TIMESTAMPTZ
+  video_url TEXT NOT NULL,
+  engagement_score DOUBLE PRECISION,
+  reason_text TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-trending_videos (
-  id BIGSERIAL PRIMARY KEY,
-  category_id BIGINT FK categories.id,
-  video_id VARCHAR(256) UNIQUE,
-  creator_username VARCHAR(256),
-  title TEXT,
-  hashtags TEXT[], -- array of tags
-  views BIGINT,
-  likes BIGINT,
-  engagement_score FLOAT,
-  thumbnail_url TEXT,
-  video_url TEXT,
-  scraped_at TIMESTAMPTZ,
-  expires_at TIMESTAMPTZ -- 24h cache TTL
-);
+-- Indexes
+CREATE INDEX idx_step_items_plan_step ON step_items(plan_step_id);
+Seeded data:
 
-user_actions (
-  id BIGSERIAL PRIMARY KEY,
-  user_id BIGINT FK users.id,
-  plan_step_id BIGINT FK plan_steps.id,
-  step_item_id BIGINT FK step_items.id,
-  action_type VARCHAR(32), -- "watched", "liked", "blocked", "followed"
-  completed_at TIMESTAMPTZ
-);
-8. API Contracts (v2)
+8 categories (5 free: personal_growth, entertainment, wellness, creative, learning; 3 premium: science_tech, food, travel).
+
+1 demo plan ("Demo Personal Growth Plan") with 1 step ("watch 3 videos") and 3 mock video items.
+
+7. API Contracts (v3, Current)
 GET /api/plan?lang=en&category=personal_growth
 
-Response:
+Response (actual from production):
 
 json
 {
-  "plan_id": 123,
   "plan_date": "2025-12-07",
   "language": "en",
   "category_code": "personal_growth",
@@ -224,169 +230,170 @@ json
       "step_id": 1,
       "order": 1,
       "action_type": "watch",
-      "text": "Watch 3 high-quality videos on personal development",
+      "text": "Watch these 3 videos about personal growth",
       "items": [
         {
-          "step_item_id": 101,
-          "video_id": "tiktok_abc123",
-          "creator": "@motivationcoach",
+          "step_item_id": 1,
+          "video_id": "demo_vid_1",
+          "creator": "@growthcoach",
           "title": "5 Habits to Change Your Life",
-          "thumbnail_url": "https://...",
-          "video_url": "https://vm.tiktok.com/...",
-          "reason": "High engagement, trending in Personal Growth",
-          "is_completed": false
+          "thumbnail_url": "https://example.com/thumb1.jpg",
+          "video_url": "https://www.tiktok.com/@growthcoach/video/0000000000000000001",
+          "reason": "High engagement, great for beginners"
         },
         { ... },
         { ... }
       ]
-    },
-    { "step_id": 2, "order": 2, ... },
-    ...
-  ],
-  "completion_progress": {
-    "completed_steps": 0,
-    "total_steps": 5,
-    "percentage": 0
-  }
+    }
+  ]
 }
-POST /api/plan/{plan_id}/step/{step_id}/complete-action
+Observed: Each items[] contains video_url, title, creator, thumbnail_url, reason — ready for frontend to display and link.
 
-Request:
+8. Repository Structure
+text
+FYPFixer/
+├── db/
+│   ├── schema/
+│   │   ├── db_schema_v0.sql               (users, plans, plan_steps)
+│   │   ├── db_schema_categories_v0.sql    (categories table + is_premium)
+│   │   └── db_schema_step_items_v0.sql    (step_items table)
+│   ├── migrations/
+│   │   └── (planned: future ALTER migrations)
+│   └── seeds/
+│       ├── db_seed_categories_v0.sql      (8 categories)
+│       └── db_seed_demo_plan_v0.sql       (demo plan + 3 videos)
+├── docs/
+│   ├── architecture/
+│   │   └── c4-context.md
+│   ├── context/
+│   │   ├── PROJECT_CONTEXT_v3.md (this file)
+│   │   └── README.md
+│   └── domain-model.md
+├── app/
+│   ├── __init__.py          (Flask app init, blueprint registration)
+│   ├── models.py            (Category, PlanStep, StepItem)
+│   └── routes/
+│       ├── __init__.py
+│       ├── health.py        (/api/health)
+│       └── plan.py          (/api/plan with items[])
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── images/
+├── templates/
+│   ├── base.html
+│   ├── index.html           (landing)
+│   └── plan.html            (plan display — to be enhanced)
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+├── .env
+├── main.py
+├── .gitignore
+└── README.md
+9. Roles & Responsibilities
+You (founder): Product vision, UX decisions, roadmap, deployment, testing on real users.
 
-json
-{
-  "step_item_id": 101,
-  "action_type": "watched"
-}
-Response:
+I (AI): Architecture, code design, implementation, documentation, debugging.
 
-json
-{
-  "success": true,
-  "action_recorded": {
-    "user_id": 42,
-    "step_item_id": 101,
-    "action_type": "watched",
-    "completed_at": "2025-12-07T14:30:00Z"
-  }
-}
-9. Roles & Responsibilities (Unchanged)
-You (founder): Product vision, roadmap, UX testing, deployment decisions.
+Shared: Git discipline, decision logs (C4 updates, ADRs).
 
-I (AI): Architecture, code design, implementation, documentation, tooling guidance.
+10. Roadmap (Sessions 2–10+)
+Session 2 (Current focus — next steps):
 
-Shared: Git commits, schema design, decision logs.
+✅ Database schema with step_items.
 
-10. Roadmap (v2, Updated)
-Session 2–3 (Current):
+✅ /api/plan returns video items.
 
-✅ Docker infra (Postgres, Redis, web).
+🔄 UI enhancement: Display video cards from items[] on frontend (thumbnail, title, creator, "Open in TikTok" button).
 
-✅ Categories table + seed (8 categories, free/premium).
+🔄 Expand demo plan to 5 steps (not just 1 step).
 
-✅ /api/plan basic implementation (reading from categories).
+Session 3–4:
 
-🔄 Next: Add step_items table, design TikTok scraper, mock video data.
+Mock more video data for different categories.
 
-Session 4–5:
+Add "Step completion tracking" (user marks video as watched).
 
-TikTok public video scraper (Firecrawl/Apify or manual parsing).
+Build /api/plan/{plan_id}/complete-action endpoint.
 
-Populate trending_videos table with real data.
+Session 5–6:
 
-/api/plan returns actual video links (not mocked).
+TikTok public video scraper (Firecrawl or manual).
 
-user_actions table + POST endpoint to track "watched/liked/blocked".
+trending_videos table + refresh job.
 
-Session 6–7:
+Replace mock URLs with real TikTok video links.
 
-AI layer: LLM generates recommendations ("pick 5 videos for category X, language Y").
+Session 7–8:
 
-Qdrant + vector embeddings for semantic search.
+AI layer: LLM generates recommendations.
 
-n8n workflow for video recommendation pipeline.
+Qdrant integration for semantic search of videos.
 
-Premium/free tier logic (2 vs 5–7 videos per step).
+Premium/free tier restrictions.
 
-Session 8–9:
+Session 9–10:
 
-UI improvements: video preview cards, progress tracking, completion animations.
-
-Mobile PWA features (offline, installable).
-
-Analytics dashboard (completion rates, engagement, LTV).
-
-Session 10+:
+User analytics: completion rates, engagement, LTV.
 
 Cloud deployment (Hetzner / DigitalOcean).
 
-Kubernetes setup.
-
 Payment integration (Stripe).
 
-Advanced: multi-language support, creator partnerships, affiliate links.
+Session 11+:
 
-11. Key Documents (in Repo)
-docs/architecture/c4-context.md — System Context (textual).
+Kubernetes setup, auto-scaling.
 
-docs/domain-model.md — Domain Model (User, Plan, Step, Category, StepItem).
+Multi-language polish.
 
-db_schema_v0.sql — Initial schema (users, categories, plans, plan_steps).
+Creator partnerships, referral system.
 
-db_schema_categories_v0.sql — Categories table with is_premium.
+11. Key Development Principles
+One artifact at a time: Changes committed to main, one feature per PR/commit.
 
-db_seed_categories_v0.sql — 8 base categories seeded.
+Documentation first: C4 diagrams, schema changes, API contracts updated before/after code.
 
-Dockerfile, docker-compose.yml, .env — Infrastructure.
+No hardcoded data: All templates and lists go to DB (categories, plans, steps, items).
 
-requirements.txt — Python dependencies.
+Testing locally: Docker Compose is source of truth; dev = prod (as much as possible).
 
-app/__init__.py, app/routes/health.py, app/routes/plan.py — Flask app.
+Git is truth: All decisions, context, code live in the repo.
 
-app/models.py — SQLAlchemy models (Category, User, Plan, PlanStep).
+12. Environment Setup (Both Locations)
+Locations:
 
-12. Environment Setup (Both Locations: [translate:дача] & [translate:дом])
-Minimal requirements:
+дача﻿: C:\Users\mefmax\OneDrive\!My Projects\FYPFixer
 
-Windows 10/11 (WSL2 support).
+дом﻿: Same path (OneDrive synced).
 
-Git + GitHub desktop.
+Requirements:
 
-VS Code.
+Windows 10/11 + WSL2.
 
-Docker Desktop (installed, tested).
+Docker Desktop (latest stable).
 
-Python 3.11+ (for local testing, optional for Docker dev).
+Git + GitHub CLI.
 
-Repository:
+VS Code + Python extension.
 
-https://github.com/mefmax/fypfixer.git
+Python 3.11+ (for local testing).
 
-Main branch: production-ready code.
+Commands (standard):
 
-All changes: git add + commit + push.
-
-Local paths:
-
-[translate:дача]: C:\Users\mefmax\OneDrive\!My Projects\FYPFixer
-
-[translate:дом]: Same path (OneDrive synced).
-
-Docker commands (standard):
-
-powershell
-docker compose up -d
-docker compose ps
-docker logs fypfixer-web
+bash
+git pull
 docker compose build web
-docker compose down -v
-🎯 Next Immediate Steps
-Add step_items table to schema (video links, metadata).
-
-Design TikTok scraper (what service? Firecrawl? manual?).
-
-Mock video data for first 3 categories.
-
-Update /api/plan to return videos instead of text.
-
-Create UI component to display videos + action buttons.
+docker compose up -d
+curl http://localhost:8000/api/plan
+13. Current Status Summary (2025‑12‑07, 18:14 MSK)
+Aspect	Status	Evidence
+Infrastructure	✅ Ready	Docker + Postgres + Redis running, all 5 tables exist.
+Backend Core	✅ Ready	Flask app + /api/health + /api/plan working.
+Database	✅ Ready	Schema v3 with step_items; 8 categories seeded; 1 demo plan with 3 videos.
+API Response	✅ Ready	/api/plan returns steps[].items[] with video_url, title, creator, reason.
+UI Layer	🔄 WIP	Templates exist, but not yet displaying video cards from items[].
+Real Video Scraper	❌ Todo	Currently mock TikTok URLs.
+AI Recommendations	❌ Todo	No LLM integration yet.
+Premium/Free Logic	❌ Todo	All categories accessible (no tier restrictions).
+Next action (Session 2): Upgrade frontend to display video items as clickable cards with thumbnails and "Open in TikTok" buttons.
