@@ -13,7 +13,10 @@ babel = Babel()
 
 def create_app():
     """Создать и сконфигурировать Flask приложение."""
-    app = Flask(__name__)
+    import os
+    app = Flask(__name__, 
+               template_folder=os.path.join(os.path.dirname(__file__), '..', 'templates'),
+               static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'))
     
     # Конфиг БД
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -41,18 +44,9 @@ def create_app():
     # Маршрут для главной страницы
     @app.route('/')
     def index():
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>FYPFixer</title>
-        </head>
-        <body>
-            <h1>FYPFixer API</h1>
-            <p><a href="/api/plan?category=personal_growth&lang=en">Test /api/plan</a></p>
-        </body>
-        </html>
-        """
+        from flask import render_template
+        return render_template('index.html')
+
     
     # Создать таблицы (если не существуют)
     with app.app_context():
