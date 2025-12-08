@@ -575,17 +575,12 @@
             planSection.style.display = 'block';
         }
 
-        function openInTikTok() {
-            if (!currentVideoUrl) return;
-            
-            // Открываем в modal (WebView на мобиле)
-            const modal = document.getElementById('modal-overlay');
-            const iframe = document.getElementById('modal-iframe');
-            
-            // Используем TikTok URL напрямую
-            iframe.src = currentVideoUrl;
-            modal.classList.add('active');
-        }
+function openInTikTok() {
+    if (!currentVideoUrl) return;
+    
+    // Открываем в новой вкладке (или в TikTok app если на мобиле)
+    window.open(currentVideoUrl, '_blank');
+}
 
         function closeModal() {
             const modal = document.getElementById('modal-overlay');
