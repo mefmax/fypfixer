@@ -1,161 +1,93 @@
-from flask import Blueprint, request, jsonify
-from datetime import datetime
+from flask import Blueprint, request, jsonify, current_app
+from app.models import Category, Plan, PlanStep, StepItem
+from datetime import date
 
 plan_bp = Blueprint('plan', __name__, url_prefix='/api')
 
-# Mock данные планов по категориям
-PLANS = {
-    'personal_growth': {
-        'title': 'Personal Growth Plan',
-        'steps': [
-            {
-                'title': 'Identify Your Goal',
-                'description': 'Watch inspirational videos about personal development',
-                'items': [
-                    {
-                        'title': '5 Habits to Change Your Life',
-                        'creator': '@growthcoach',
-                        'reason': 'High engagement, great for beginners',
-                        'video_url': 'https://www.tiktok.com/@growthcoach/video/123456',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Growth+Habits'
-                    },
-                    {
-                        'title': 'Morning Routine for Success',
-                        'creator': '@successmind',
-                        'reason': 'Practical tips for daily improvement',
-                        'video_url': 'https://www.tiktok.com/@successmind/video/123457',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Morning+Routine'
-                    },
-                    {
-                        'title': 'Productivity Hacks',
-                        'creator': '@timemaster',
-                        'reason': 'Learn to manage your time better',
-                        'video_url': 'https://www.tiktok.com/@timemaster/video/123458',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Productivity'
-                    }
-                ]
-            },
-            {
-                'title': 'Learn From Experts',
-                'description': 'Follow creators who share valuable insights',
-                'items': [
-                    {
-                        'title': 'The Science of Success',
-                        'creator': '@sciencebro',
-                        'reason': 'Evidence-based growth strategies',
-                        'video_url': 'https://www.tiktok.com/@sciencebro/video/123459',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Science+Success'
-                    }
-                ]
-            },
-            {
-                'title': 'Take Action',
-                'description': 'Apply what you learned today',
-                'items': [
-                    {
-                        'title': 'Challenge: 30 Days of Growth',
-                        'creator': '@challengeking',
-                        'reason': 'Join a community of learners',
-                        'video_url': 'https://www.tiktok.com/@challengeking/video/123460',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=30+Day+Challenge'
-                    }
-                ]
-            }
-        ]
-    },
-    'fitness': {
-        'title': 'Fitness Plan',
-        'steps': [
-            {
-                'title': 'Warm Up & Stretch',
-                'description': 'Prepare your body for exercise',
-                'items': [
-                    {
-                        'title': '5-Minute Full Body Stretch',
-                        'creator': '@fitnessguru',
-                        'reason': 'Easy warm-up for all levels',
-                        'video_url': 'https://www.tiktok.com/@fitnessguru/video/123461',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Warm+Up'
-                    }
-                ]
-            },
-            {
-                'title': 'Main Workout',
-                'description': 'Follow a guided workout routine',
-                'items': [
-                    {
-                        'title': '10-Minute HIIT Workout',
-                        'creator': '@fitcoach',
-                        'reason': 'Effective cardio training',
-                        'video_url': 'https://www.tiktok.com/@fitcoach/video/123462',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=HIIT+Workout'
-                    }
-                ]
-            },
-            {
-                'title': 'Cool Down',
-                'description': 'Relax and recover after workout',
-                'items': [
-                    {
-                        'title': 'Cooldown Stretches',
-                        'creator': '@stretchmaster',
-                        'reason': 'Prevent muscle soreness',
-                        'video_url': 'https://www.tiktok.com/@stretchmaster/video/123463',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Cool+Down'
-                    }
-                ]
-            }
-        ]
-    },
-    'education': {
-        'title': 'Learning Plan',
-        'steps': [
-            {
-                'title': 'Learn New Skill',
-                'description': 'Watch educational content',
-                'items': [
-                    {
-                        'title': 'Python Basics in 60 Seconds',
-                        'creator': '@codetok',
-                        'reason': 'Quick programming tips',
-                        'video_url': 'https://www.tiktok.com/@codetok/video/123464',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Python+Basics'
-                    }
-                ]
-            }
-        ]
-    },
-    'entertainment': {
-        'title': 'Entertainment Plan',
-        'steps': [
-            {
-                'title': 'Discover New Content',
-                'description': 'Enjoy trending entertainment videos',
-                'items': [
-                    {
-                        'title': 'Funny Fails Compilation',
-                        'creator': '@laughtrack',
-                        'reason': 'Trending entertainment',
-                        'video_url': 'https://www.tiktok.com/@laughtrack/video/123465',
-                        'thumbnail_url': 'https://via.placeholder.com/300x200?text=Funny+Fails'
-                    }
-                ]
-            }
-        ]
-    }
-}
-
 @plan_bp.route('/plan', methods=['GET'])
 def get_plan():
-    category = request.args.get('category', 'personal_growth').lower()
-    lang = request.args.get('lang', 'en')
+    """
+    Получить план на день.
+    Query params:
+    - category: код категории (personal_growth, entertainment, etc.)
+    - lang: язык (en, ru, es)
+    """
+    category_code = request.args.get('category', 'personal_growth')
+    language = request.args.get('lang', 'en')
     
-    plan = PLANS.get(category, PLANS['personal_growth'])
+    # Найти категорию
+    category = Category.query.filter_by(code=category_code).first()
+    if not category:
+        return jsonify({'error': 'Category not found'}), 404
+    
+    # Найти или создать план на сегодня
+    today = date.today()
+    plan = Plan.query.filter_by(
+        category_id=category.id,
+        plan_date=today,
+        language=language,
+        is_template=False
+    ).first()
+    
+    # Если плана нет, используем template план (демо)
+    if not plan:
+        plan = Plan.query.filter_by(
+            category_id=category.id,
+            is_template=True,
+            language=language
+        ).first()
+    
+    # Если и template нет, вернуть демо-план (hardcode только для отладки)
+    if not plan:
+        # Вернуть простой демо-ответ
+        return jsonify({
+            'plan_date': str(today),
+            'language': language,
+            'category_code': category_code,
+            'category_name': getattr(category, f'name_{language}', category.name_en),
+            'steps': [
+                {
+                    'step_id': 0,
+                    'order': 1,
+                    'action_type': 'watch',
+                    'text': f'No plan yet for {category_code}',
+                    'items': []
+                }
+            ]
+        })
+    
+    # Получить шаги плана
+    steps = PlanStep.query.filter_by(plan_id=plan.id).order_by(PlanStep.step_order).all()
+    
+    # Построить ответ
+    steps_data = []
+    for step in steps:
+        items = StepItem.query.filter_by(plan_step_id=step.id).all()
+        items_data = [
+            {
+                'step_item_id': item.id,
+                'video_id': item.video_id,
+                'creator': item.creator_username,
+                'title': item.title,
+                'thumbnail_url': item.thumbnail_url,
+                'video_url': item.video_url,
+                'reason': item.reason_text
+            }
+            for item in items
+        ]
+        
+        steps_data.append({
+            'step_id': step.id,
+            'order': step.step_order,
+            'action_type': step.action_type,
+            'text': getattr(step, f'text_{language}', step.text_en),
+            'items': items_data
+        })
     
     return jsonify({
-        'category': category,
-        'language': lang,
-        'generated_at': datetime.now().isoformat(),
-        'title': plan['title'],
-        'steps': plan['steps']
+        'plan_date': str(today),
+        'language': language,
+        'category_code': category_code,
+        'category_name': getattr(category, f'name_{language}', category.name_en),
+        'steps': steps_data
     })

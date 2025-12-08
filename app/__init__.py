@@ -1,56 +1,62 @@
-from flask import Flask, render_template, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_babel import Babel, gettext
+from flask_babel import Babel
 import os
-from pathlib import Path
+from dotenv import load_dotenv
 
+# Загрузить .env
+load_dotenv()
+
+# Инициализировать расширения (без приложения)
 db = SQLAlchemy()
 babel = Babel()
 
-
 def create_app():
-    # базовая директория проекта: /app
-    BASE_DIR = Path(__file__).resolve().parent.parent
-
-    app = Flask(
-        __name__,
-        template_folder=str(BASE_DIR / "templates"),
-        static_folder=str(BASE_DIR / "static"),
+    """Создать и сконфигурировать Flask приложение."""
+    app = Flask(__name__)
+    
+    # Конфиг БД
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+        'DATABASE_URL',
+        'postgresql://fypfixer:fypfixer@db:5432/fypfixer'
     )
-
-    # Babel конфиг
-    app.config["BABEL_DEFAULT_LOCALE"] = "en"
-    app.config["BABEL_TRANSLATION_DIRECTORIES"] = str(BASE_DIR / "translations")
-
-    # БД конфиг
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        database_url = database_url.replace("postgresql://", "postgresql+psycopg2://")
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url or "sqlite:///fypfixer.db"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+    app.config['BABEL_DEFAULT_TIMEZONE'] = 'UTC'
+    
+    # Инициализировать расширения с приложением
     db.init_app(app)
-    babel.init_app(app, locale_selector=lambda: get_locale())
-
-    # контекстный процессор для {{ _(...) }}
-    @app.context_processor
-    def inject_gettext():
-        return dict(_=gettext)
-
-    from app.routes.health import health_bp
+    babel.init_app(app)
+    
+    # Регистрировать blueprints
     from app.routes.plan import plan_bp
-
-    app.register_blueprint(health_bp)
+    from app.routes.health import health_bp
+    
     app.register_blueprint(plan_bp)
-
-    @app.route("/")
+    app.register_blueprint(health_bp)
+    
+    # КРИТИЧНО: Импортировать модели ПЕРЕД create_all()
+    from app.models import User, Category, Plan, PlanStep, StepItem
+    
+    # Маршрут для главной страницы
+    @app.route('/')
     def index():
-        return render_template("index.html")
-
-    return app
-
-
-def get_locale():
-    return request.args.get("lang") or request.accept_languages.best_match(
-        ["en", "ru", "es"]
-    ) or "en"
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>FYPFixer</title>
+        </head>
+        <body>
+            <h1>FYPFixer API</h1>
+            <p><a href="/api/plan?category=personal_growth&lang=en">Test /api/plan</a></p>
+        </body>
+        </html>
+        """
+    
+    # Создать таблицы (если не существуют)
+    with app.app_context():
+        db.create_all()
+        print("✅ Database tables created/verified")
+    
+    return app  # ✅ ПРАВИЛЬНО — return в кон
