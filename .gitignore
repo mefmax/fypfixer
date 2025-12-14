@@ -39,3 +39,4 @@ Thumbs.db
 
 # Секреты 
 .env
+.env.local

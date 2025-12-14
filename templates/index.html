@@ -118,49 +118,6 @@
             background: rgba(255, 45, 85, 0.1);
         }
 
-        .category-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: rgba(10, 14, 39, 0.95);
-            border: 1px solid rgba(255, 45, 85, 0.2);
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            list-style: none;
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 10;
-        }
-
-        .category-suggestions li {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 12px;
-        }
-
-        .category-suggestions li:hover {
-            background: rgba(255, 45, 85, 0.2);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-            min-width: 100px;
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-
         .disclaimer {
             background: rgba(255, 45, 85, 0.15);
             border: 1px solid rgba(255, 45, 85, 0.3);
@@ -287,18 +244,10 @@
             color: #fff;
         }
 
-        .btn-open:active {
-            transform: scale(0.96);
-        }
-
         .btn-next {
             background: rgba(255, 255, 255, 0.08);
             color: #e0e0e0;
             border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .btn-next:active {
-            background: rgba(255, 255, 255, 0.15);
         }
 
         .plan-section {
@@ -352,60 +301,6 @@
             margin: 4px 0 0 0;
         }
 
-        /* MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            height: 90vh;
-            max-height: 800px;
-            background: black;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(0, 0, 0, 0.7);
-            border: none;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
         @media (min-width: 768px) {
             .container {
                 padding: 40px 24px;
@@ -445,8 +340,8 @@
 
         <!-- HERO -->
         <div class="hero">
-            <h1>{{ _('Tame Your Feed') }}</h1>
-            <p>{{ _('Get a daily plan to fix your TikTok For You page.') }}</p>
+            <h1>Tame Your Feed</h1>
+            <p>Get a daily plan to fix your TikTok For You page.</p>
         </div>
 
         <!-- CATEGORY SELECT -->
@@ -455,74 +350,170 @@
                 type="text" 
                 class="category-input" 
                 id="category-input" 
-                placeholder="{{ _('personal_growth, fitness, education...') }}"
+                placeholder="personal_growth, fitness, education..."
                 autocomplete="off"
             >
-            <button class="btn-primary" onclick="getPlan()">{{ _('Get Plan') }}</button>
+            <button class="btn-primary" onclick="getPlan()">Get Plan</button>
         </div>
 
         <!-- DISCLAIMER -->
         <div class="disclaimer">
-            🛡️ <strong>{{ _('Safe:') }}</strong> {{ _('We never log in, use bots, or auto-like. Just a simple checklist for you.') }}
+            🛡️ <strong>Safe:</strong> We never log in, use bots, or auto-like. Just a simple checklist for you.
         </div>
 
         <!-- TODAY'S VIDEO -->
         <div class="video-section">
-            <h2>{{ _("Today's Video") }}</h2>
+            <h2>Today's Video</h2>
             <div id="video-card-container">
                 <div style="color: #808080; font-size: 13px; text-align: center; padding: 40px 20px;">
-                    {{ _('Loading your first video...') }}
+                    Loading your first video...
                 </div>
             </div>
         </div>
 
         <!-- PLAN STEPS -->
         <div class="plan-section" id="plan-section" style="display:none;">
-            <h2>{{ _('Your Plan') }}</h2>
+            <h2>Your Plan</h2>
             <div class="steps" id="steps-container"></div>
         </div>
     </div>
 
-    <!-- ACTION BUTTONS (FIXED) -->
+    <!-- ACTION BUTTONS -->
     <div class="action-buttons">
         <button class="btn-action btn-open" onclick="openInTikTok()" id="btn-open-tiktok">
-            {{ _('Open in TikTok') }}
+            Open in TikTok
         </button>
         <button class="btn-action btn-next" onclick="nextVideo()">
-            {{ _('Next Video') }}
+            Next Video
         </button>
-    </div>
-
-    <!-- MODAL OVERLAY -->
-    <div id="modal-overlay" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">✕</button>
-            <iframe id="modal-iframe" class="modal-iframe" src=""></iframe>
-        </div>
     </div>
 
     <script>
-        const POPULAR_CATEGORIES = ['personal_growth', 'fitness', 'education', 'entertainment'];
+        const translations = {
+            en: {
+                title: 'Tame Your Feed',
+                subtitle: 'Get a daily plan to fix your TikTok For You page.',
+                placeholder: 'personal_growth, fitness, education...',
+                get_plan: 'Get Plan',
+                safe: 'Safe:',
+                disclaimer: 'We never log in, use bots, or auto-like. Just a simple checklist for you.',
+                today_video: "Today's Video",
+                loading: 'Loading your first video...',
+                no_videos: 'No videos in the plan yet',
+                your_plan: 'Your Plan',
+                open_tiktok: 'Open in TikTok',
+                next_video: 'Next Video'
+            },
+            ru: {
+                title: 'Укроти ленту',
+                subtitle: 'Получи ежедневный план, чтобы навести порядок в ленте TikTok.',
+                placeholder: 'personal_growth, фитнес, образование...',
+                get_plan: 'Получить план',
+                safe: 'Безопасно:',
+                disclaimer: 'Мы не входим в аккаунт, не используем ботов и автолайки. Только чек‑лист действий.',
+                today_video: 'Сегодняшнее видео',
+                loading: 'Загружаем первое видео...',
+                no_videos: 'В плане пока нет видео',
+                your_plan: 'Твой план',
+                open_tiktok: 'Открыть в TikTok',
+                next_video: 'Следующее видео'
+            },
+            es: {
+                title: 'Domina tu feed',
+                subtitle: 'Obtén un plan diario para arreglar tu página Para ti de TikTok.',
+                placeholder: 'crecimiento_personal, fitness, educación...',
+                get_plan: 'Obtener plan',
+                safe: 'Seguro:',
+                disclaimer: 'Nunca iniciamos sesión, usamos bots ni auto‑likes. Solo una lista sencilla para ti.',
+                today_video: 'Video de hoy',
+                loading: 'Cargando tu primer video...',
+                no_videos: 'Todavía no hay videos en el plan',
+                your_plan: 'Tu plan',
+                open_tiktok: 'Abrir en TikTok',
+                next_video: 'Siguiente video'
+            }
+        };
 
         function getCurrentLang() {
-            return new URLSearchParams(window.location.search).get('lang') || 'en';
+            const urlLang = new URLSearchParams(window.location.search).get('lang');
+            if (urlLang) return urlLang;
+            const saved = localStorage.getItem('fypfixer_lang');
+            return saved || 'en';
+        }
+
+        function t(key) {
+            const lang = getCurrentLang();
+            return (translations[lang] && translations[lang][key]) || translations.en[key] || key;
+        }
+
+        function updatePageTexts() {
+            document.querySelector('.hero h1').textContent = t('title');
+            document.querySelector('.hero p').textContent = t('subtitle');
+
+            const input = document.getElementById('category-input');
+            if (input) input.placeholder = t('placeholder');
+
+            const primaryBtn = document.querySelector('.btn-primary');
+            if (primaryBtn) primaryBtn.textContent = t('get_plan');
+
+            const disc = document.querySelector('.disclaimer');
+            if (disc) {
+                const strong = disc.querySelector('strong');
+                if (strong) strong.textContent = t('safe');
+                const tail = disc.childNodes[disc.childNodes.length - 1];
+                if (tail && tail.nodeType === Node.TEXT_NODE) {
+                    tail.textContent = ' ' + t('disclaimer');
+                }
+            }
+
+            const vTitle = document.querySelector('.video-section h2');
+            if (vTitle) vTitle.textContent = t('today_video');
+
+            const planTitle = document.querySelector('.plan-section h2');
+            if (planTitle) planTitle.textContent = t('your_plan');
+
+            const openBtn = document.getElementById('btn-open-tiktok');
+            if (openBtn) openBtn.textContent = t('open_tiktok');
+
+            const nextBtn = document.querySelector('.btn-next');
+            if (nextBtn) nextBtn.textContent = t('next_video');
+        }
+
+        function updateLangButton() {
+            const map = { en: '🌐 EN', ru: '🌐 RU', es: '🌐 ES' };
+            const btn = document.getElementById('lang-btn');
+            if (btn) btn.textContent = map[getCurrentLang()] || '🌐 EN';
+        }
+
+        function toggleLang() {
+            const langs = ['en', 'ru', 'es'];
+            const current = getCurrentLang();
+            const idx = langs.indexOf(current);
+            const nextLang = langs[(idx + 1) % langs.length];
+
+            localStorage.setItem('fypfixer_lang', nextLang);
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', nextLang);
+            window.history.replaceState({}, '', url.toString());
+
+            updateLangButton();
+            updatePageTexts();
         }
 
         let currentItems = [];
         let currentIndex = 0;
         let currentVideoUrl = '';
-        let planData = null;
 
         function fetchVideoPlan(category = 'personal_growth') {
-            const currentLang = getCurrentLang();
-            const url = `/api/plan?lang=${encodeURIComponent(currentLang)}&category=${encodeURIComponent(category)}`;
+            const lang = getCurrentLang();
+            const url = `/api/plan?lang=${encodeURIComponent(lang)}&category=${encodeURIComponent(category)}`;
             fetch(url)
-                .then(response => response.json())
+                .then(r => r.json())
                 .then(data => {
-                    planData = data;
                     if (!data.steps || !data.steps.length || !data.steps[0].items || !data.steps[0].items.length) {
                         document.getElementById('video-card-container').innerHTML =
-                            '<div style="color: #808080; font-size: 13px;">{{ _("No videos in the plan yet") }}</div>';
+                            `<div style="color:#808080;font-size:13px;">${t('no_videos')}</div>`;
+                        renderPlan(data);
                         return;
                     }
                     currentItems = data.steps[0].items;
@@ -530,9 +521,7 @@
                     renderCurrentVideo();
                     renderPlan(data);
                 })
-                .catch(err => {
-                    console.error('Error loading plan:', err);
-                });
+                .catch(err => console.error('Error loading plan', err));
         }
 
         function renderCurrentVideo() {
@@ -548,7 +537,7 @@
 
             container.innerHTML = `
                 <div class="video-card" onclick="openInTikTok()">
-                    <div class="video-thumb" style="background-image: url('${thumb}');"></div>
+                    <div class="video-thumb" style="background-image:url('${thumb}');"></div>
                     <div class="video-meta">
                         <div class="video-title">${safeTitle}</div>
                         <div class="video-creator">${safeCreator}</div>
@@ -557,36 +546,79 @@
                 </div>
             `;
         }
+function renderPlan(data) {
+    const planSection = document.getElementById('plan-section');
+    const stepsContainer = document.getElementById('steps-container');
 
-        function renderPlan(data) {
-            const planSection = document.getElementById('plan-section');
-            const stepsContainer = document.getElementById('steps-container');
-            
-            if (!data.steps || !data.steps.length) return;
-            
-            stepsContainer.innerHTML = data.steps.map((step, idx) => `
-                <div class="step">
+    if (!data.steps || !data.steps.length) {
+        stepsContainer.innerHTML = '<div style="font-size:12px;color:#b0b0b0;">No steps in the plan yet</div>';
+        planSection.style.display = 'block';
+        return;
+    }
+
+    const planKey = `fypfixer_progress_${data.plan_date || 'demo'}_${data.category_code || 'personal_growth'}`;
+    const steps = data.steps;
+    const totalSteps = steps.length;
+
+    // загрузить сохранённый прогресс
+    let completedSteps = [];
+    try {
+        const saved = localStorage.getItem(planKey);
+        if (saved) completedSteps = JSON.parse(saved);
+    } catch (e) {
+        completedSteps = [];
+    }
+
+    let completed = completedSteps.length;
+
+    stepsContainer.innerHTML = `
+        <div id="plan-progress-text" style="font-size:11px;color:#b0b0b0;margin-bottom:6px;">
+            ${completed} of ${totalSteps} steps completed
+        </div>
+    ` + steps.map((step, idx) => {
+        const stepKey = `step_${idx}`;
+        const isChecked = completedSteps.includes(stepKey) ? 'checked' : '';
+        const text = step.text || ('Step ' + (idx + 1));
+        return `
+            <label class="step" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+                <input type="checkbox"
+                       data-step-key="${stepKey}"
+                       ${isChecked}
+                       style="margin-top:4px;accent-color:#FF2D55;">
+                <div>
                     <div class="step-number">${idx + 1}</div>
-                    <div class="step-title">${step.title}</div>
-                    ${step.description ? `<div class="step-desc">${step.description}</div>` : ''}
+                    <p class="step-title">${text}</p>
                 </div>
-            `).join('');
-            
-            planSection.style.display = 'block';
-        }
+            </label>
+        `;
+    }).join('');
 
-function openInTikTok() {
-    if (!currentVideoUrl) return;
-    
-    // Открываем в новой вкладке (или в TikTok app если на мобиле)
-    window.open(currentVideoUrl, '_blank');
+    const progressText = document.getElementById('plan-progress-text');
+    const checkboxes = stepsContainer.querySelectorAll('input[type="checkbox"]');
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            const stepKey = cb.getAttribute('data-step-key');
+            if (cb.checked) {
+                if (!completedSteps.includes(stepKey)) {
+                    completedSteps.push(stepKey);
+                }
+            } else {
+                completedSteps = completedSteps.filter(k => k !== stepKey);
+            }
+            completed = completedSteps.length;
+            localStorage.setItem(planKey, JSON.stringify(completedSteps));
+            progressText.textContent = `${completed} of ${totalSteps} steps completed`;
+        });
+    });
+
+    planSection.style.display = 'block';
 }
 
-        function closeModal() {
-            const modal = document.getElementById('modal-overlay');
-            const iframe = document.getElementById('modal-iframe');
-            modal.classList.remove('active');
-            iframe.src = '';
+
+        function openInTikTok() {
+            if (!currentVideoUrl) return;
+            window.open(currentVideoUrl, '_blank');
         }
 
         function nextVideo() {
@@ -597,38 +629,13 @@ function openInTikTok() {
 
         function getPlan() {
             const category = document.getElementById('category-input').value.trim() || 'personal_growth';
-            if (category) {
-                fetchVideoPlan(category);
-            }
+            fetchVideoPlan(category);
         }
 
-        function toggleLang() {
-            const currentLang = getCurrentLang();
-            const langs = ['en', 'ru', 'es'];
-            const currentIndex = langs.indexOf(currentLang);
-            const nextLang = langs[(currentIndex + 1) % langs.length];
-            window.location.href = `/?lang=${nextLang}`;
-        }
-
-        function updateLangButton() {
-            const currentLang = getCurrentLang();
-            const langNames = {
-                'en': '🌐 EN',
-                'ru': '🌐 RU',
-                'es': '🌐 ES'
-            };
-            document.getElementById('lang-btn').textContent = langNames[currentLang];
-        }
-
-        // Закрывай modal при клике вне
-        document.getElementById('modal-overlay').addEventListener('click', (e) => {
-            if (e.target.id === 'modal-overlay') {
-                closeModal();
-            }
-        });
-
-        fetchVideoPlan();
+        // init
         updateLangButton();
+        updatePageTexts();
+        fetchVideoPlan();
     </script>
 </body>
 </html>
