@@ -40,3 +40,35 @@ Thumbs.db
 # Секреты 
 .env
 .env.local
+# Documentation (internal)
+docs/
+daily/
+UI/
+Project days/
+
+# Frontend
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env
+Frontend/.env.local
+
+# Backend
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+.env
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

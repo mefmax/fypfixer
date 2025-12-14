@@ -38,18 +38,26 @@ def extract_json_from_response(content: str) -> str:
     if not content:
         return "{}"
 
-    marker = "`" * 3
+    # Ищем начало код-блока
+    marker = "```"
     first = content.find(marker)
     if first == -1:
+        # Нет код-блоков, считаем, что это сразу JSON
         return content.strip()
 
+    # Пропускаем возможное слово после трех бэктиков (например, json)
+    # Находим конец первой строки после трёх бэктиков
     line_end = content.find("\n", first + len(marker))
     if line_end == -1:
+        # Весь ответ в одной строке, без полезного содержимого
         return "{}"
 
+    # Содержимое начинается со следующей строки
     start = line_end + 1
+    # Находим закрывающий блок
     second = content.find(marker, start)
     if second == -1:
+        # Закрывающего блока нет, берём остаток
         return content[start:].strip()
 
     return content[start:second].strip()
@@ -66,25 +74,15 @@ def try_direct_tiktok_search(category_name: str) -> list:
             "If no real videos found, return {\"videos\": []}."
         )
 
-        print(f"      📧 Prompt: {prompt[:100]}...")
+        print(f"      📤 Prompt: {prompt[:100]}...")
 
         response = client.chat.completions.create(
             model="sonar-pro",
             messages=[{"role": "user", "content": prompt}],
         )
+        content = response.choices[0].message.content
         
-        print(f"      🔧 Response type: {type(response)}")
-        print(f"      🔧 Response dir: {[x for x in dir(response) if not x.startswith('_')]}")
-        
-        try:
-            content = response.choices[0].message.content
-        except (AttributeError, IndexError, TypeError) as e:
-            print(f"      🔧 Error accessing .choices[0].message.content: {e}")
-            print(f"      🔧 Response.choices type: {type(response.choices)}")
-            print(f"      🔧 Response.choices: {response.choices}")
-            return []
-        
-        print(f"      📨 Raw response (first 300 chars): {content[:300]}")
+        print(f"      📥 Raw response (first 300 chars): {content[:300]}")
 
         json_str = extract_json_from_response(content)
         print(f"      🔍 Extracted JSON (first 200 chars): {json_str[:200]}")
@@ -110,8 +108,6 @@ def try_direct_tiktok_search(category_name: str) -> list:
         return []
     except Exception as e:
         print(f"    [Level 1] ❌ Error: {str(e)[:80]}")
-        import traceback
-        traceback.print_exc()
         return []
 
 
@@ -126,20 +122,15 @@ def try_hashtag_discovery(category_name: str) -> list:
             "If no real videos, return {\"videos\": []}."
         )
 
-        print(f"      📧 Prompt: {prompt[:100]}...")
+        print(f"      📤 Prompt: {prompt[:100]}...")
 
         response = client.chat.completions.create(
             model="sonar-pro",
             messages=[{"role": "user", "content": prompt}],
         )
+        content = response.choices[0].message.content
         
-        try:
-            content = response.choices[0].message.content
-        except (AttributeError, IndexError, TypeError) as e:
-            print(f"      🔧 Error accessing .choices[0].message.content: {e}")
-            return []
-        
-        print(f"      📨 Raw response (first 300 chars): {content[:300]}")
+        print(f"      📥 Raw response (first 300 chars): {content[:300]}")
 
         json_str = extract_json_from_response(content)
         print(f"      🔍 Extracted JSON (first 200 chars): {json_str[:200]}")
@@ -165,8 +156,6 @@ def try_hashtag_discovery(category_name: str) -> list:
         return []
     except Exception as e:
         print(f"    [Level 2] ❌ Error: {str(e)[:80]}")
-        import traceback
-        traceback.print_exc()
         return []
 
 
@@ -181,20 +170,15 @@ def try_creator_search(category_name: str) -> list:
             "If no real videos, return {\"videos\": []}."
         )
 
-        print(f"      📧 Prompt: {prompt[:100]}...")
+        print(f"      📤 Prompt: {prompt[:100]}...")
 
         response = client.chat.completions.create(
             model="sonar-pro",
             messages=[{"role": "user", "content": prompt}],
         )
+        content = response.choices[0].message.content
         
-        try:
-            content = response.choices[0].message.content
-        except (AttributeError, IndexError, TypeError) as e:
-            print(f"      🔧 Error accessing .choices[0].message.content: {e}")
-            return []
-        
-        print(f"      📨 Raw response (first 300 chars): {content[:300]}")
+        print(f"      📥 Raw response (first 300 chars): {content[:300]}")
 
         json_str = extract_json_from_response(content)
         print(f"      🔍 Extracted JSON (first 200 chars): {json_str[:200]}")
@@ -220,8 +204,6 @@ def try_creator_search(category_name: str) -> list:
         return []
     except Exception as e:
         print(f"    [Level 3] ❌ Error: {str(e)[:80]}")
-        import traceback
-        traceback.print_exc()
         return []
 
 

@@ -1,7 +1,8 @@
 import requests
 import json
+import os
 
-api_key = "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"
+api_key = os.getenv('PERPLEXITY_API_KEY')
 
 response = requests.post(
     "https://api.perplexity.ai/chat/completions",
