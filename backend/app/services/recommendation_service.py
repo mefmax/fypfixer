@@ -48,10 +48,17 @@ class RecommendationService:
             category_code = self._get_default_category()
 
         try:
-            # 1. Get category
+            # 1. Get category (fallback to default if not found)
             category = Category.query.filter_by(code=category_code, is_active=True).first()
             if not category:
-                return self._error('category_not_found', f"Category '{category_code}' not found")
+                # Try default category as fallback
+                default_code = self._get_default_category()
+                category = Category.query.filter_by(code=default_code, is_active=True).first()
+                if not category:
+                    # Last resort: get any active category
+                    category = Category.query.filter_by(is_active=True).first()
+                if not category:
+                    return self._error('category_not_found', 'No active categories found')
 
             # 2. Check cache
             if not force_regenerate:
