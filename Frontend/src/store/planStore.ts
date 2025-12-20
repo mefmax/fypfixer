@@ -19,7 +19,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchPlan: async (categoryCode = 'personal_growth', language = 'en') => {
+  fetchPlan: async (categoryCode = 'fitness', language = 'en') => {
     set({ isLoading: true, error: null });
 
     try {

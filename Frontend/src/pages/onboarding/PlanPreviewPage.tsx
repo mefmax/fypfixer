@@ -84,7 +84,7 @@ export const PlanPreviewPage: React.FC = () => {
   };
 
   const handleStartDay = async () => {
-    const category = localStorage.getItem('fypfixer_category') || 'personal_growth';
+    const category = localStorage.getItem('fypfixer_category') || 'fitness';
 
     // If authenticated, mark onboarding complete
     if (user) {

@@ -22,7 +22,7 @@ export const DashboardPage: React.FC = () => {
   });
 
   // Get saved category or default (no longer used for multi-category)
-  const currentCategory = localStorage.getItem(STORAGE_KEYS.CATEGORY) || 'personal_growth';
+  const currentCategory = localStorage.getItem(STORAGE_KEYS.CATEGORY) || 'fitness';
 
   // Load plan on mount
   useEffect(() => {

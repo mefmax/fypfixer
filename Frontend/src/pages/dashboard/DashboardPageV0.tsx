@@ -20,8 +20,8 @@ export const DashboardPageV0: React.FC = () => {
 
   // Fetch daily plan
   const { data, isLoading } = useQuery({
-    queryKey: ['dailyPlan', 'personal_growth', user?.language || 'en'],
-    queryFn: () => plansApi.getDailyPlan('personal_growth', user?.language || 'en'),
+    queryKey: ['dailyPlan', 'fitness', user?.language || 'en'],
+    queryFn: () => plansApi.getDailyPlan('fitness', user?.language || 'en'),
   });
 
   // Complete step mutation

@@ -127,23 +127,23 @@ export const GoalsOnboardingPage: React.FC = () => {
   // Helper to map goals to category
   const determineCategoryFromGoals = (goalIds: string[]): string => {
     const goalToCategory: Record<string, string> = {
-      'more-educational': 'learning',
-      'more-inspiration': 'creativity',
-      'more-motivation': 'personal_growth',
+      'more-educational': 'books',
+      'more-inspiration': 'art',
+      'more-motivation': 'fitness',
       'more-wellness': 'wellness',
-      'niche-focus': 'personal_growth',
-      'less-doomscroll': 'personal_growth',
+      'niche-focus': 'fitness',
+      'less-doomscroll': 'fitness',
       'less-negativity': 'wellness',
-      'less-noise': 'personal_growth',
+      'less-noise': 'fitness',
     };
 
-    const categories = goalIds.map(id => goalToCategory[id] || 'personal_growth');
+    const categories = goalIds.map(id => goalToCategory[id] || 'fitness');
     const counts = categories.reduce((acc, cat) => {
       acc[cat] = (acc[cat] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'personal_growth';
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'fitness';
   };
 
   const handleContinue = async () => {
