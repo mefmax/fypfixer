@@ -7,7 +7,7 @@
  * - Expired premium categories become inactive (greyed out)
  */
 
-import { Category } from './plan.types';
+import type { Category } from './plan.types';
 
 export interface UserCategory {
   id: number;

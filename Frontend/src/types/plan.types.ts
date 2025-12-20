@@ -50,3 +50,25 @@ export interface PlanListResponse {
     offset: number;
   };
 }
+
+// Multi-category selection types
+export interface UserCategory {
+  id: number;
+  categoryId: number;
+  isActive: boolean;
+  isPremium: boolean;
+  purchasedAt: string | null;
+  expiresAt: string | null;
+  daysRemaining: number | null;
+  isExpired: boolean;
+  category: Category;
+}
+
+export interface CategoryStats {
+  freeActive: number;
+  freeLimit: number;
+  freeRemaining: number;
+  premiumActive: number;
+  premiumExpired: number;
+  totalActive: number;
+}

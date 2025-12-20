@@ -13,7 +13,6 @@ import type { ApiResponse } from '../types/api.types';
 import type {
   UserCategoriesResponse,
   UserCategory,
-  AddCategoryRequest,
   RemoveCategoryResponse,
   CategoryStats,
 } from '../types/category.types';

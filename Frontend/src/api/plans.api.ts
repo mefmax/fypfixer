@@ -1,5 +1,5 @@
 import apiClient from '../lib/axios';
-import type { Plan, Category } from '../types/plan.types';
+import type { Plan, Category, UserCategory, CategoryStats } from '../types/plan.types';
 import type { ApiResponse } from '../types/api.types';
 import type { DailyActionPlan, CompleteActionResponse } from '../types/action.types';
 
@@ -51,6 +51,30 @@ export const plansApi = {
     const response = await apiClient.get('/categories', {
       params: { language },
     });
+    return response.data;
+  },
+
+  // Multi-category selection methods
+  getUserCategories: async (includeInactive = false): Promise<ApiResponse<{
+    categories: UserCategory[];
+    stats: CategoryStats;
+  }>> => {
+    const response = await apiClient.get('/user/categories', {
+      params: { include_inactive: includeInactive },
+    });
+    return response.data;
+  },
+
+  addUserCategory: async (categoryId: number, isPurchased = false): Promise<ApiResponse<UserCategory>> => {
+    const response = await apiClient.post('/user/categories', {
+      categoryId,
+      isPurchased,
+    });
+    return response.data;
+  },
+
+  removeUserCategory: async (categoryId: number): Promise<ApiResponse<{ removed: boolean }>> => {
+    const response = await apiClient.delete(`/user/categories/${categoryId}`);
     return response.data;
   },
 };

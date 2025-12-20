@@ -21,15 +21,13 @@ export const DashboardPage: React.FC = () => {
     amount: 0,
   });
 
-  // Get saved category or default
-  const [currentCategory, setCurrentCategory] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.CATEGORY) || 'personal_growth';
-  });
+  // Get saved category or default (no longer used for multi-category)
+  const currentCategory = localStorage.getItem(STORAGE_KEYS.CATEGORY) || 'personal_growth';
 
-  // Load plan on mount and category change
+  // Load plan on mount
   useEffect(() => {
     fetchPlan(currentCategory, 'en');
-  }, [fetchPlan, currentCategory]);
+  }, [fetchPlan]);
 
   // Load streak info if authenticated
   useEffect(() => {
@@ -64,10 +62,10 @@ export const DashboardPage: React.FC = () => {
     setShowCategoryPicker(true);
   };
 
-  const handleCategorySelect = (categoryCode: string) => {
-    setCurrentCategory(categoryCode);
-    localStorage.setItem(STORAGE_KEYS.CATEGORY, categoryCode);
-    // Plan will reload via useEffect
+  const handleCategoriesChanged = () => {
+    // Reload plan with user's active categories
+    // Backend will use user's selected categories automatically
+    fetchPlan(undefined, 'en');
   };
 
   const handleCompleteAction = async (actionId: string) => {
@@ -137,9 +135,8 @@ export const DashboardPage: React.FC = () => {
       {/* Category Picker Modal */}
       <CategoryPicker
         isOpen={showCategoryPicker}
-        currentCategory={currentCategory}
-        onSelect={handleCategorySelect}
         onClose={() => setShowCategoryPicker(false)}
+        onCategoriesChanged={handleCategoriesChanged}
       />
 
       {/* Error Toast */}
