@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import type { RegisterData } from '../../types/auth.types';
+import { logger } from '../../lib/logger';
 
 export const RegisterForm = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export const RegisterForm = () => {
       });
       navigate('/');
     } catch (err) {
-      console.error('Registration failed:', err);
+      logger.error('Registration failed:', err);
     }
   };
 

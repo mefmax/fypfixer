@@ -10,10 +10,19 @@ Endpoints:
 from flask import Blueprint, request, g
 from app.services.recommendation_service import recommendation_service
 from app.services.motivation_service import motivation_service
+from app.services.settings_service import settings_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required, jwt_optional
 
 recommendations_bp = Blueprint('recommendations', __name__)
+
+
+def _get_category_from_request(data_key='category', args_key='category'):
+    """Get category code from request, falling back to dynamic default."""
+    default = settings_service.get_default_category_code() or 'fitness'
+    if request.is_json and request.get_json():
+        return request.get_json().get(data_key, default)
+    return request.args.get(args_key, default)
 
 
 @recommendations_bp.route('/plans/generate', methods=['POST'])
@@ -45,10 +54,11 @@ def generate_plan():
     }
     """
     data = request.get_json() or {}
+    default_category = settings_service.get_default_category_code() or 'fitness'
 
     result = recommendation_service.generate_daily_plan(
         user_id=getattr(g, 'current_user_id', None),
-        category_code=data.get('category', 'personal_growth'),
+        category_code=data.get('category', default_category),
         language=data.get('language', 'en'),
         force_regenerate=data.get('forceRegenerate', False),
     )
@@ -70,12 +80,13 @@ def get_today_plan():
     Get today's plan (returns cached if exists).
 
     Query params:
-    - category: category code (default: personal_growth)
+    - category: category code (default: from settings)
     - language: language code (default: en)
     """
+    default_category = settings_service.get_default_category_code() or 'fitness'
     result = recommendation_service.generate_daily_plan(
         user_id=getattr(g, 'current_user_id', None),
-        category_code=request.args.get('category', 'personal_growth'),
+        category_code=request.args.get('category', default_category),
         language=request.args.get('language', 'en'),
         force_regenerate=False,  # Use cache
     )
@@ -106,9 +117,10 @@ def get_plan_status():
         }
     }
     """
+    default_category = settings_service.get_default_category_code() or 'fitness'
     result = recommendation_service.generate_daily_plan(
         user_id=getattr(g, 'current_user_id', None),
-        category_code=request.args.get('category', 'personal_growth'),
+        category_code=request.args.get('category', default_category),
         language=request.args.get('language', 'en'),
         force_regenerate=False,
     )

@@ -6,6 +6,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { preferencesApi } from '../../api/preferences.api';
 import { useAuthStore } from '../../store/authStore';
+import { logger } from '../../lib/logger';
 
 interface Goal {
   id: string;
@@ -72,7 +73,7 @@ export const PlanPreviewPage: React.FC = () => {
       try {
         setSelectedGoals(JSON.parse(storedGoals));
       } catch (e) {
-        console.error('Failed to parse selected goals:', e);
+        logger.error('Failed to parse selected goals:', e);
       }
     }
   }, []);
@@ -96,7 +97,7 @@ export const PlanPreviewPage: React.FC = () => {
 
         await preferencesApi.completeOnboarding(goalIds, category);
       } catch (error) {
-        console.error('Failed to complete onboarding:', error);
+        logger.error('Failed to complete onboarding:', error);
       }
     }
 
@@ -109,7 +110,7 @@ export const PlanPreviewPage: React.FC = () => {
 
   const handleViewFullPlan = () => {
     // TODO: Navigate to full plan view or show modal
-    console.log('View full 7-day plan');
+    logger.debug('View full 7-day plan');
   };
 
   return (

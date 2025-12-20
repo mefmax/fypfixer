@@ -1,5 +1,6 @@
 from flask import Blueprint, request, g
 from app.services import plan_service
+from app.services.settings_service import settings_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 from app.utils.errors import APIError
@@ -23,8 +24,9 @@ def get_plans():
 def get_daily_plan():
     """Legacy endpoint for compatibility"""
     try:
+        default_category = settings_service.get_default_category_code() or 'fitness'
         plan = plan_service.get_daily_plan(
-            request.args.get('category', 'personal_growth'),
+            request.args.get('category', default_category),
             request.args.get('lang', 'en')
         )
         return success_response(plan)

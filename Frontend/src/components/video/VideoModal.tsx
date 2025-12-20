@@ -53,6 +53,10 @@ export const VideoModal: React.FC = () => {
               className="w-full h-full border-none"
               allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              // SECURITY: Sandbox iframe to limit capabilities
+              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading="lazy"
             />
           </div>
 

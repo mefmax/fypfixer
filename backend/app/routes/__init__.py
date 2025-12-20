@@ -10,6 +10,7 @@ from .preferences import preferences_bp
 from .analytics import analytics_bp
 from .waitlist import waitlist_bp
 from .user_categories import user_categories_bp
+from .config import config_bp
 
 
 def register_blueprints(app):
@@ -38,3 +39,6 @@ def register_blueprints(app):
 
     # User Categories (Multi-select)
     app.register_blueprint(user_categories_bp, url_prefix='/api')
+
+    # Config (Public settings)
+    app.register_blueprint(config_bp, url_prefix='/api')

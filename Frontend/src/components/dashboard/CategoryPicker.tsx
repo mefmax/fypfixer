@@ -5,6 +5,7 @@ import { plansApi } from '../../api/plans.api';
 import { waitlistApi } from '../../api/waitlist.api';
 import { PremiumComingSoonModal } from '../premium/PremiumComingSoonModal';
 import type { Category as CategoryType, UserCategory, CategoryStats } from '../../types/plan.types';
+import { logger } from '../../lib/logger';
 
 interface CategoryPickerProps {
   isOpen: boolean;
@@ -64,7 +65,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
         setSelectedIds(activeIds);
       }
     } catch (err) {
-      console.error('Failed to load categories:', err);
+      logger.error('Failed to load categories:', err);
       setError('Failed to load categories');
     } finally {
       setIsLoading(false);
@@ -117,7 +118,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
       // Notify parent
       onCategoriesChanged?.();
     } catch (err: any) {
-      console.error('Failed to update category:', err);
+      logger.error('Failed to update category:', err);
       setError(err.response?.data?.error?.message || 'Failed to update');
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -131,7 +132,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
       await waitlistApi.joinWaitlist(premiumModalCategory.id);
       await loadData(); // Reload to update waitlist status
     } catch (err) {
-      console.error('Failed to join waitlist:', err);
+      logger.error('Failed to join waitlist:', err);
       throw err;
     }
   };

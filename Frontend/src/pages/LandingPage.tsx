@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
+import { logger } from '../lib/logger';
 
 interface LandingPageProps {
   className?: string;
@@ -15,7 +16,7 @@ export function LandingPage({ className = '' }: LandingPageProps) {
     e.preventDefault();
     // Handle form submission - navigate to register with interests
     if (input.trim()) {
-      console.log('User interests:', input);
+      logger.debug('User interests:', input);
       // Store interests in localStorage or pass as state
       localStorage.setItem('userInterests', input);
       navigate('/auth/register');

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { DailyActionPlan } from '../types/action.types';
 import { plansApi } from '../api/plans.api';
+import { getDefaultCategoryCode } from '../lib/appConfig';
+import { logger } from '../lib/logger';
 
 interface PlanState {
   plan: DailyActionPlan | null;
@@ -19,25 +21,26 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchPlan: async (categoryCode = 'fitness', language = 'en') => {
+  fetchPlan: async (categoryCode, language = 'en') => {
+    // Use default from config if not provided
+    const category = categoryCode || getDefaultCategoryCode();
     set({ isLoading: true, error: null });
 
     try {
-      const response = await plansApi.getDailyActions(categoryCode, language);
+      const response = await plansApi.getDailyActions(category, language);
 
       if (response.success && response.data) {
-        // Log AI source for debugging
-        console.log('Plan loaded:', {
+        // SECURITY: Only log in development
+        logger.debug('Plan loaded:', {
           source: response.data.metadata?.source,
           provider: response.data.metadata?.provider,
-          motivation: response.data.motivation,
         });
         set({ plan: response.data, isLoading: false });
       } else {
         set({ error: 'Failed to load plan', isLoading: false });
       }
     } catch (error) {
-      console.error('Failed to fetch plan:', error);
+      logger.error('Failed to fetch plan:', error);
       set({ error: 'Failed to load plan', isLoading: false });
     }
   },
@@ -84,7 +87,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       }
       return null;
     } catch (error) {
-      console.error('Failed to complete action:', error);
+      logger.error('Failed to complete action:', error);
       // Revert optimistic update on error
       set({
         plan: originalPlan,
@@ -131,7 +134,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       }
       return null;
     } catch (error) {
-      console.error('Failed to uncomplete action:', error);
+      logger.error('Failed to uncomplete action:', error);
       // Revert optimistic update on error
       set({
         plan: originalPlan,

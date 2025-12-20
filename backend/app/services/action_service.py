@@ -4,14 +4,23 @@ from app import db
 from app.utils.errors import NotFoundError
 from app.services.streak_service import streak_service
 from app.services.analytics_service import analytics_service
+from app.services.settings_service import settings_service
 
 
 class ActionService:
-    def get_daily_actions(self, category_code='personal_growth', language='en', user_id=None):
+    def _get_default_category(self) -> str:
+        """Get default category from settings."""
+        return settings_service.get_default_category_code() or 'fitness'
+
+    def get_daily_actions(self, category_code=None, language='en', user_id=None):
         """
         Get daily action plan for given category.
         Includes 'completed' status for each action if user_id provided.
         """
+        # Use default category if not provided
+        if not category_code:
+            category_code = self._get_default_category()
+
         category = Category.query.filter_by(code=category_code, is_active=True).first()
         if not category:
             raise NotFoundError('Category')

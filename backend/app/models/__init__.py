@@ -13,8 +13,9 @@ from .user_recommendation import UserRecommendation
 from .message_template import MessageTemplate
 from .premium_waitlist import PremiumWaitlist
 from .user_category import UserCategory
+from .app_setting import AppSetting
 
 __all__ = ['User', 'Category', 'Plan', 'PlanStep', 'StepItem',
            'UserProgress', 'UserPreferences', 'RefreshToken', 'Action',
            'UserBehaviorStats', 'TiktokVideo', 'UserRecommendation', 'MessageTemplate',
-           'PremiumWaitlist', 'UserCategory']
+           'PremiumWaitlist', 'UserCategory', 'AppSetting']

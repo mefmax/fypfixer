@@ -13,6 +13,7 @@ from app.ai_providers import get_ai_provider
 from app.ai_providers.base import UserContext, SelectedAction
 from app.config import get_seed_creators, ACTION_LIMITS, DIFFICULTY
 from app.services.analytics_service import analytics_service
+from app.services.settings_service import settings_service
 
 
 class RecommendationService:
@@ -27,16 +28,24 @@ class RecommendationService:
             self._ai_provider = get_ai_provider()
         return self._ai_provider
 
+    def _get_default_category(self) -> str:
+        """Get default category from settings."""
+        return settings_service.get_default_category_code() or 'fitness'
+
     def generate_daily_plan(
         self,
         user_id: Optional[int],
-        category_code: str = 'personal_growth',
+        category_code: str = None,
         language: str = 'en',
         force_regenerate: bool = False
     ) -> Dict[str, Any]:
         """Generate a personalized daily plan."""
 
         start_time = time.time()
+
+        # Use default category if not provided
+        if not category_code:
+            category_code = self._get_default_category()
 
         try:
             # 1. Get category
@@ -214,7 +223,20 @@ class RecommendationService:
     def _format_response(self, plan, category, user_id, language, source, gen_time):
         """Format plan for API response."""
         actions = Action.query.filter_by(plan_id=plan.id).order_by(Action.sort_order).all()
-        progress = self._get_progress(user_id, plan.id) if user_id else {'completed': 0, 'total': len(actions)}
+
+        # OPTIMIZATION: Load all progress in ONE query instead of N+1
+        progress_map = {}
+        if user_id and actions:
+            action_ids = [a.id for a in actions]
+            progress_list = UserProgress.query.filter(
+                UserProgress.user_id == user_id,
+                UserProgress.action_id.in_(action_ids)
+            ).all()
+            progress_map = {p.action_id: p for p in progress_list}
+
+        completed_count = len(progress_map)
+        total_count = len(actions)
+        progress = {'completed': completed_count, 'total': total_count}
 
         pct = int(progress['completed'] / progress['total'] * 100) if progress['total'] > 0 else 0
         motivation = MessageTemplate.find_best_match('progress', {'progress_pct': pct}, language)
@@ -229,7 +251,7 @@ class RecommendationService:
                 'date': str(plan.plan_date),
                 'categoryCode': category.code,
                 'categoryName': category.name_en,
-                'actions': [self._format_action(a, user_id) for a in actions],
+                'actions': [self._format_action(a, progress_map.get(a.id)) for a in actions],
                 'motivation': motivation,
                 'progress': progress,
                 'metadata': {
@@ -241,15 +263,10 @@ class RecommendationService:
             }
         }
 
-    def _format_action(self, action, user_id):
-        """Format single action."""
-        completed = False
-        completed_at = None
-        if user_id:
-            p = UserProgress.query.filter_by(user_id=user_id, action_id=action.id).first()
-            if p:
-                completed = True
-                completed_at = p.completed_at.isoformat() if p.completed_at else None
+    def _format_action(self, action, progress=None):
+        """Format single action with optional progress."""
+        completed = progress is not None
+        completed_at = progress.completed_at.isoformat() if progress and progress.completed_at else None
 
         return {
             'id': f'action-{action.id}',
@@ -267,14 +284,6 @@ class RecommendationService:
             'completedAt': completed_at,
         }
 
-    def _get_progress(self, user_id, plan_id):
-        """Get user progress."""
-        actions = Action.query.filter_by(plan_id=plan_id).all()
-        ids = [a.id for a in actions]
-        done = UserProgress.query.filter(
-            UserProgress.user_id == user_id, UserProgress.action_id.in_(ids)
-        ).count()
-        return {'completed': done, 'total': len(actions)}
 
     def _error(self, code, message):
         return {'success': False, 'error': {'code': code, 'message': message}}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
@@ -9,6 +9,8 @@ import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
 import { VideoModal } from './components/video/VideoModal';
+import { loadAppConfig } from './lib/appConfig';
+import { logger } from './lib/logger';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -43,6 +45,11 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 function App() {
+  // Load app config on startup (async, non-blocking)
+  useEffect(() => {
+    loadAppConfig().catch((err) => logger.error('Failed to load app config:', err));
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

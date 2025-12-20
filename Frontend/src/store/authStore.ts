@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, LoginData, RegisterData } from '../types/auth.types';
 import { authApi } from '../api/auth.api';
+import { logger } from '../lib/logger';
 
 interface AuthState {
   user: User | null;
@@ -110,7 +111,7 @@ export const useAuthStore = create<AuthState>()(
             set({ hasCompletedOnboarding: response.data.hasCompletedOnboarding });
           }
         } catch (error) {
-          console.error('Failed to check onboarding status:', error);
+          logger.error('Failed to check onboarding status:', error);
           // Assume completed to avoid blocking users
           set({ hasCompletedOnboarding: true });
         }

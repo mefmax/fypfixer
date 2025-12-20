@@ -19,11 +19,25 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
+# SECURITY: Create non-root user for nginx
+RUN addgroup -g 101 -S nginx || true && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
+
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# SECURITY: Set proper permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid
+
+# SECURITY: Run as non-root user
+USER nginx
 
 EXPOSE 80
 

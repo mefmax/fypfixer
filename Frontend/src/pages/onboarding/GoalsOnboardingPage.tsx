@@ -19,6 +19,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { useAuthStore } from '../../store/authStore';
 import { preferencesApi } from '../../api/preferences.api';
+import { logger } from '../../lib/logger';
 
 interface Goal {
   id: string;
@@ -162,7 +163,7 @@ export const GoalsOnboardingPage: React.FC = () => {
           preferredCategory: determineCategoryFromGoals(selectedGoals),
         });
       } catch (error) {
-        console.error('Failed to save preferences:', error);
+        logger.error('Failed to save preferences:', error);
         // Continue anyway - localStorage is backup
       }
     }

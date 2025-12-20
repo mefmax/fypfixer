@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import type { LoginData } from '../../types/auth.types';
+import { logger } from '../../lib/logger';
 
 export const LoginForm = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export const LoginForm = () => {
       await login(data);
       navigate('/');
     } catch (err) {
-      console.error('Login failed:', err);
+      logger.error('Login failed:', err);
     }
   };
 

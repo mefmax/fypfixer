@@ -2,24 +2,40 @@
 Analytics API - Dashboard metrics and user analytics.
 
 Endpoints:
-- GET /api/analytics/dashboard - Admin metrics (future: require admin role)
+- GET /api/analytics/dashboard - Admin metrics (requires admin role)
 - GET /api/analytics/me - Current user's analytics
 - GET /api/analytics/me/weekly - User's weekly activity
 """
 
+import logging
 from flask import Blueprint, g
 from app.services.analytics_service import analytics_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required, jwt_optional
+from app import limiter
 
+logger = logging.getLogger(__name__)
 analytics_bp = Blueprint('analytics', __name__)
 
 
+def _is_admin(user_id: int) -> bool:
+    """Check if user has admin role."""
+    # TODO: Implement proper admin role check from database
+    # For now, check if user_id is in admin list (should be in app_settings)
+    from app.models import User
+    user = User.query.get(user_id)
+    if user and hasattr(user, 'is_admin'):
+        return user.is_admin
+    return False
+
+
 @analytics_bp.route('/analytics/dashboard', methods=['GET'])
-@jwt_optional  # TODO: Change to admin-only in production
+@jwt_required  # SECURITY: Now requires authentication
+@limiter.limit("10 per minute")  # SECURITY: Rate limit
 def get_dashboard_metrics():
     """
     Get high-level dashboard metrics.
+    SECURITY: Requires admin role.
 
     Response:
     {
@@ -33,15 +49,22 @@ def get_dashboard_metrics():
         }
     }
     """
+    # SECURITY: Check admin role
+    if not _is_admin(g.current_user_id):
+        return error_response('forbidden', 'Admin access required', status_code=403)
+
     try:
         metrics = analytics_service.get_dashboard_metrics()
         return success_response(metrics)
     except Exception as e:
-        return error_response('analytics_error', str(e), status_code=500)
+        logger.exception("Dashboard metrics error")
+        # SECURITY: Don't expose internal error details
+        return error_response('analytics_error', 'Failed to load dashboard metrics', status_code=500)
 
 
 @analytics_bp.route('/analytics/me', methods=['GET'])
 @jwt_required
+@limiter.limit("30 per minute")  # SECURITY: Rate limit
 def get_my_analytics():
     """
     Get current user's analytics.
@@ -64,11 +87,14 @@ def get_my_analytics():
         analytics = analytics_service.get_user_analytics(g.current_user_id)
         return success_response(analytics)
     except Exception as e:
-        return error_response('analytics_error', str(e), status_code=500)
+        logger.exception("User analytics error")
+        # SECURITY: Don't expose internal error details
+        return error_response('analytics_error', 'Failed to load analytics', status_code=500)
 
 
 @analytics_bp.route('/analytics/me/weekly', methods=['GET'])
 @jwt_required
+@limiter.limit("30 per minute")  # SECURITY: Rate limit
 def get_weekly_activity():
     """
     Get user's activity for the past 7 days.
@@ -87,11 +113,14 @@ def get_weekly_activity():
         weekly = analytics_service.get_weekly_activity(g.current_user_id)
         return success_response(weekly)
     except Exception as e:
-        return error_response('analytics_error', str(e), status_code=500)
+        logger.exception("Weekly activity error")
+        # SECURITY: Don't expose internal error details
+        return error_response('analytics_error', 'Failed to load weekly activity', status_code=500)
 
 
 @analytics_bp.route('/analytics/me/breakdown', methods=['GET'])
 @jwt_required
+@limiter.limit("30 per minute")  # SECURITY: Rate limit
 def get_category_breakdown():
     """
     Get breakdown of completed actions by type.
@@ -111,4 +140,6 @@ def get_category_breakdown():
         breakdown = analytics_service.get_category_breakdown(g.current_user_id)
         return success_response(breakdown)
     except Exception as e:
-        return error_response('analytics_error', str(e), status_code=500)
+        logger.exception("Category breakdown error")
+        # SECURITY: Don't expose internal error details
+        return error_response('analytics_error', 'Failed to load breakdown', status_code=500)

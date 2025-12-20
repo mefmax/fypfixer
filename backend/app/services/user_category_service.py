@@ -2,19 +2,18 @@
 UserCategoryService - manages user category subscriptions.
 
 Business rules:
-- FREE categories: max 3, permanent access
-- PREMIUM categories: unlimited, 14 days from purchase
+- FREE categories: max N (from settings), permanent access
+- PREMIUM categories: unlimited, N days from purchase (from settings)
 - Expired premium categories become inactive (greyed out)
 """
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
+from sqlalchemy.orm import joinedload
 from app import db
 from app.models import UserCategory, Category, User
 from app.utils.errors import APIError, NotFoundError, ValidationError
-
-# Constants
-MAX_FREE_CATEGORIES = 3
-PREMIUM_ACCESS_DAYS = 14
+from app.services.settings_service import get_setting
+from app.services.cache_service import cache_service
 
 
 class UserCategoryService:
@@ -23,11 +22,22 @@ class UserCategoryService:
     def get_user_categories(self, user_id: int, include_inactive: bool = False) -> List[Dict]:
         """
         Get all categories for a user with their subscription status.
+        Uses eager loading to avoid N+1 queries.
+        Uses Redis cache for performance.
         """
         # First, check and deactivate expired categories
         self._deactivate_expired(user_id)
 
-        query = UserCategory.query.filter_by(user_id=user_id)
+        # Try cache (only for active categories)
+        if not include_inactive:
+            cached = cache_service.get_user_categories(user_id)
+            if cached:
+                return cached
+
+        query = UserCategory.query.options(
+            joinedload(UserCategory.category)  # Eager load to avoid N+1
+        ).filter_by(user_id=user_id)
+
         if not include_inactive:
             query = query.filter_by(is_active=True)
 
@@ -38,6 +48,10 @@ class UserCategoryService:
             data = uc.to_dict()
             data['category'] = uc.category.to_dict() if uc.category else None
             result.append(data)
+
+        # Cache active categories
+        if not include_inactive:
+            cache_service.set_user_categories(user_id, result)
 
         return result
 
@@ -76,12 +90,16 @@ class UserCategoryService:
             category_id=category_id
         ).first()
 
+        # Get settings
+        max_free = get_setting('max_free_categories', 3)
+        premium_days = get_setting('premium_access_days', 14)
+
         if existing:
             if existing.is_expired and is_purchased:
                 # Reactivate expired premium
                 existing.is_active = True
                 existing.purchased_at = datetime.now(timezone.utc)
-                existing.expires_at = datetime.now(timezone.utc) + timedelta(days=PREMIUM_ACCESS_DAYS)
+                existing.expires_at = datetime.now(timezone.utc) + timedelta(days=premium_days)
                 db.session.commit()
                 return existing.to_dict()
             elif existing.is_active:
@@ -96,9 +114,9 @@ class UserCategoryService:
                 Category.is_premium == False
             ).count()
 
-            if free_count >= MAX_FREE_CATEGORIES:
+            if free_count >= max_free:
                 raise ValidationError(
-                    f'Maximum {MAX_FREE_CATEGORIES} free categories allowed. '
+                    f'Maximum {max_free} free categories allowed. '
                     'Remove one to add another.'
                 )
 
@@ -115,10 +133,13 @@ class UserCategoryService:
 
         if category.is_premium:
             user_cat.purchased_at = datetime.now(timezone.utc)
-            user_cat.expires_at = datetime.now(timezone.utc) + timedelta(days=PREMIUM_ACCESS_DAYS)
+            user_cat.expires_at = datetime.now(timezone.utc) + timedelta(days=premium_days)
 
         db.session.add(user_cat)
         db.session.commit()
+
+        # Invalidate cache
+        cache_service.invalidate_user_categories(user_id)
 
         return user_cat.to_dict()
 
@@ -137,6 +158,10 @@ class UserCategoryService:
 
         db.session.delete(user_cat)
         db.session.commit()
+
+        # Invalidate cache
+        cache_service.invalidate_user_categories(user_id)
+
         return True
 
     def deactivate_category(self, user_id: int, category_id: int) -> bool:
@@ -151,6 +176,10 @@ class UserCategoryService:
 
         user_cat.is_active = False
         db.session.commit()
+
+        # Invalidate cache
+        cache_service.invalidate_user_categories(user_id)
+
         return True
 
     def _deactivate_expired(self, user_id: int):
@@ -167,21 +196,28 @@ class UserCategoryService:
 
         if expired:
             db.session.commit()
+            # Invalidate cache after expiring categories
+            cache_service.invalidate_user_categories(user_id)
 
     def get_category_stats(self, user_id: int) -> Dict:
         """Get stats about user's categories."""
         self._deactivate_expired(user_id)
 
-        all_cats = UserCategory.query.filter_by(user_id=user_id).all()
+        # Eager load to avoid N+1
+        all_cats = UserCategory.query.options(
+            joinedload(UserCategory.category)
+        ).filter_by(user_id=user_id).all()
 
         free_active = sum(1 for uc in all_cats if uc.is_active and not uc.category.is_premium)
         premium_active = sum(1 for uc in all_cats if uc.is_active and uc.category.is_premium)
         premium_expired = sum(1 for uc in all_cats if not uc.is_active and uc.category.is_premium)
 
+        max_free = get_setting('max_free_categories', 3)
+
         return {
             'freeActive': free_active,
-            'freeLimit': MAX_FREE_CATEGORIES,
-            'freeRemaining': MAX_FREE_CATEGORIES - free_active,
+            'freeLimit': max_free,
+            'freeRemaining': max_free - free_active,
             'premiumActive': premium_active,
             'premiumExpired': premium_expired,
             'totalActive': free_active + premium_active,

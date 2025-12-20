@@ -8,6 +8,8 @@ import { usePlanStore } from '../../store/planStore';
 import { userApi, type StreakInfo } from '../../api/user.api';
 import { useAuthStore } from '../../store/authStore';
 import { STORAGE_KEYS } from '../../lib/constants';
+import { getDefaultCategoryCode } from '../../lib/appConfig';
+import { logger } from '../../lib/logger';
 
 export const DashboardPage: React.FC = () => {
   const { plan, isLoading, error, fetchPlan, completeAction, uncompleteAction } = usePlanStore();
@@ -21,8 +23,8 @@ export const DashboardPage: React.FC = () => {
     amount: 0,
   });
 
-  // Get saved category or default (no longer used for multi-category)
-  const currentCategory = localStorage.getItem(STORAGE_KEYS.CATEGORY) || 'fitness';
+  // Get saved category or default from config (loaded dynamically)
+  const currentCategory = localStorage.getItem(STORAGE_KEYS.CATEGORY) || getDefaultCategoryCode();
 
   // Load plan on mount
   useEffect(() => {
@@ -43,7 +45,7 @@ export const DashboardPage: React.FC = () => {
         setStreakInfo(response.data);
       }
     } catch (error) {
-      console.error('Failed to load streak info:', error);
+      logger.error('Failed to load streak info:', error);
     }
   }, []);
 
