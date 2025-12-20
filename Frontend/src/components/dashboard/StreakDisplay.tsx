@@ -43,7 +43,7 @@ export const StreakDisplay: React.FC<StreakDisplayProps> = ({
             <Star className="w-4 h-4 text-yellow-400" />
             <span className="text-sm font-medium text-white">{level}</span>
           </div>
-          <p className="text-xs text-white/40 mt-1">{totalXp.toLocaleString()} XP</p>
+          <p className="text-xs text-white/40 mt-1">{totalXp?.toLocaleString() || 0} XP</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export const StreakDisplay: React.FC<StreakDisplayProps> = ({
           <TrendingUp className="w-4 h-4 text-green-400" />
           <div>
             <p className="text-xs text-white/60">Total XP</p>
-            <p className="text-sm font-semibold text-white">{totalXp.toLocaleString()}</p>
+            <p className="text-sm font-semibold text-white">{totalXp?.toLocaleString() || 0}</p>
           </div>
         </div>
       </div>

@@ -45,6 +45,7 @@ docs/
 daily/
 UI/
 Project days/
+\!context/
 
 # Frontend
 Frontend/node_modules/

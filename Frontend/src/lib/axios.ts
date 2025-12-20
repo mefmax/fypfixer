@@ -54,8 +54,19 @@ apiClient.interceptors.response.use(
       } else {
         // No refresh token - logout
         localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('auth-storage');
         window.location.href = '/auth/login';
       }
+    }
+
+    // Handle any 401 - clear auth and redirect
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth-storage');
+      window.location.href = '/auth/login';
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

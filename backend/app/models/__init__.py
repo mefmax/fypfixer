@@ -11,7 +11,9 @@ from .user_behavior_stats import UserBehaviorStats
 from .tiktok_video import TiktokVideo
 from .user_recommendation import UserRecommendation
 from .message_template import MessageTemplate
+from .premium_waitlist import PremiumWaitlist
 
 __all__ = ['User', 'Category', 'Plan', 'PlanStep', 'StepItem',
            'UserProgress', 'UserPreferences', 'RefreshToken', 'Action',
-           'UserBehaviorStats', 'TiktokVideo', 'UserRecommendation', 'MessageTemplate']
+           'UserBehaviorStats', 'TiktokVideo', 'UserRecommendation', 'MessageTemplate',
+           'PremiumWaitlist']

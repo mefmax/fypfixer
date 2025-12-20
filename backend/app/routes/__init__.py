@@ -8,6 +8,7 @@ from .recommendations import recommendations_bp
 from .user_stats import user_stats_bp
 from .preferences import preferences_bp
 from .analytics import analytics_bp
+from .waitlist import waitlist_bp
 
 
 def register_blueprints(app):
@@ -30,3 +31,6 @@ def register_blueprints(app):
 
     # Analytics
     app.register_blueprint(analytics_bp, url_prefix='/api')
+
+    # Waitlist (Premium)
+    app.register_blueprint(waitlist_bp, url_prefix='/api')

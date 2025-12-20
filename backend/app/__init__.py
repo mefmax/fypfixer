@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -15,10 +15,15 @@ def get_limiter_storage():
         return f"redis://{redis_url.split('://')[-1]}"
     return "memory://"
 
+def is_options_request():
+    """Exempt OPTIONS requests from rate limiting (CORS preflight)"""
+    return request.method == 'OPTIONS'
+
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri=get_limiter_storage()
+    storage_uri=get_limiter_storage(),
+    request_filter=is_options_request
 )
 
 def create_app(config_name='default'):
@@ -39,7 +44,12 @@ def create_app(config_name='default'):
             cors_origins = ['https://fypglow.com', 'https://www.fypglow.com', 'https://fypglow.app']
     elif isinstance(cors_origins, str):
         cors_origins = [o.strip() for o in cors_origins.split(',')]
-    CORS(app, origins=cors_origins)
+    CORS(app,
+         origins=cors_origins,
+         supports_credentials=True,
+         allow_headers=['Content-Type', 'Authorization'],
+         expose_headers=['Content-Type', 'Authorization'],
+         max_age=3600)  # Cache preflight for 1 hour
 
     from app.routes import register_blueprints
     register_blueprints(app)

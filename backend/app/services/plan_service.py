@@ -1,7 +1,7 @@
 from datetime import date
 from app.models import Plan, Category, UserProgress
 from app import db
-from app.utils.errors import NotFoundError
+from app.utils.errors import NotFoundError, APIError
 
 class PlanService:
     def get_plans(self, category_code=None, language='en', limit=20, offset=0):
@@ -10,6 +10,13 @@ class PlanService:
         if category_code:
             cat = Category.query.filter_by(code=category_code, is_active=True).first()
             if cat:
+                # Block premium categories (Coming Soon)
+                if cat.is_premium:
+                    raise APIError(
+                        code='PREMIUM_COMING_SOON',
+                        message=f'{cat.get_name(language)} is coming soon! Join the waitlist to get early access.',
+                        status_code=403
+                    )
                 query = query.filter_by(category_id=cat.id)
 
         total = query.count()
@@ -24,6 +31,14 @@ class PlanService:
         category = Category.query.filter_by(code=category_code, is_active=True).first()
         if not category:
             raise NotFoundError('Category')
+
+        # Block premium categories (Coming Soon)
+        if category.is_premium:
+            raise APIError(
+                code='PREMIUM_COMING_SOON',
+                message=f'{category.get_name(language)} is coming soon! Join the waitlist to get early access.',
+                status_code=403
+            )
 
         # Сначала ищем план на сегодня
         plan = Plan.query.filter_by(

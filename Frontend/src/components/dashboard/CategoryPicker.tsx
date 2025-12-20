@@ -1,26 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, Check, Loader2 } from 'lucide-react';
+import { X, Check, Loader2, Lock } from 'lucide-react';
 import { clsx } from 'clsx';
 import { plansApi } from '../../api/plans.api';
-
-interface Category {
-  code: string;
-  name: string;
-  description?: string;
-  icon: string;
-}
-
-// Category descriptions mapping
-const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  personal_growth: 'Motivation, habits, mindset',
-  wellness: 'Health, fitness, mental health',
-  productivity: 'Focus, time management',
-  creativity: 'Art, music, design',
-  learning: 'Education, skills, knowledge',
-  fitness: 'Exercise, sports, workouts',
-  mindfulness: 'Meditation, awareness',
-  finance: 'Money, investing, budgeting',
-};
+import { waitlistApi } from '../../api/waitlist.api';
+import { PremiumComingSoonModal } from '../premium/PremiumComingSoonModal';
+import type { Category as CategoryType } from '../../types/plan.types';
 
 interface CategoryPickerProps {
   isOpen: boolean;
@@ -29,27 +13,16 @@ interface CategoryPickerProps {
   onClose: () => void;
 }
 
-// Category icons mapping
-const CATEGORY_ICONS: Record<string, string> = {
-  personal_growth: '🚀',
-  wellness: '🧘',
-  productivity: '⚡',
-  creativity: '🎨',
-  learning: '📚',
-  fitness: '💪',
-  mindfulness: '🧠',
-  finance: '💰',
-};
-
 export const CategoryPicker: React.FC<CategoryPickerProps> = ({
   isOpen,
   currentCategory,
   onSelect,
   onClose,
 }) => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCode, setSelectedCode] = useState(currentCategory);
+  const [premiumModalCategory, setPremiumModalCategory] = useState<CategoryType | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,31 +36,41 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
     try {
       const response = await plansApi.getCategories('en');
       if (response.success && response.data?.categories) {
-        setCategories(response.data.categories.map(cat => ({
-          code: cat.code,
-          name: cat.name,
-          description: CATEGORY_DESCRIPTIONS[cat.code] || '',
-          icon: CATEGORY_ICONS[cat.code] || '📌',
-        })));
+        setCategories(response.data.categories);
       }
     } catch (error) {
       console.error('Failed to load categories:', error);
-      // Fallback categories
-      setCategories([
-        { code: 'personal_growth', name: 'Personal Growth', description: 'Motivation, habits, mindset', icon: '🚀' },
-        { code: 'wellness', name: 'Wellness', description: 'Health, fitness, mental health', icon: '🧘' },
-        { code: 'productivity', name: 'Productivity', description: 'Focus, time management', icon: '⚡' },
-        { code: 'creativity', name: 'Creativity', description: 'Art, music, design', icon: '🎨' },
-        { code: 'learning', name: 'Learning', description: 'Education, skills, knowledge', icon: '📚' },
-      ]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCategoryClick = (cat: CategoryType) => {
+    if (cat.is_premium && cat.coming_soon) {
+      // Show premium modal
+      setPremiumModalCategory(cat);
+    } else {
+      // Select category
+      setSelectedCode(cat.slug || cat.code || '');
     }
   };
 
   const handleSelect = () => {
     onSelect(selectedCode);
     onClose();
+  };
+
+  const handleJoinWaitlist = async () => {
+    if (!premiumModalCategory) return;
+
+    try {
+      await waitlistApi.joinWaitlist(premiumModalCategory.id);
+      // Reload categories to update waitlist status
+      await loadCategories();
+    } catch (error) {
+      console.error('Failed to join waitlist:', error);
+      throw error;
+    }
   };
 
   if (!isOpen) return null;
@@ -104,7 +87,7 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
       <div className="relative w-full max-w-md bg-background-secondary rounded-2xl border border-white/10 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <h2 className="text-xl font-bold text-white">Выбери цель</h2>
+          <h2 className="text-xl font-bold text-white">Choose Your Goal</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-white/10 transition-colors"
@@ -121,31 +104,51 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
             </div>
           ) : (
             <div className="space-y-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.code}
-                  onClick={() => setSelectedCode(cat.code)}
-                  className={clsx(
-                    'w-full p-4 rounded-xl border-2 text-left transition-all',
-                    selectedCode === cat.code
-                      ? 'border-primary bg-primary/10'
-                      : 'border-white/10 hover:border-white/20 bg-white/5'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{cat.icon}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white">{cat.name}</span>
-                        {selectedCode === cat.code && (
-                          <Check className="w-4 h-4 text-primary" />
-                        )}
+              {categories.map((cat) => {
+                const categorySlug = cat.slug || cat.code || '';
+                const isSelected = selectedCode === categorySlug;
+                const isPremium = cat.is_premium && cat.coming_soon;
+
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryClick(cat)}
+                    className={clsx(
+                      'w-full p-4 rounded-xl border-2 text-left transition-all relative',
+                      isSelected && !isPremium
+                        ? 'border-primary bg-primary/10'
+                        : isPremium
+                        ? 'border-orange-500/30 hover:border-orange-500/50 bg-gradient-to-br from-orange-500/10 to-pink-500/10'
+                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{cat.emoji || cat.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-white">{cat.name}</span>
+                          {isPremium && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-semibold rounded-full">
+                              <Lock className="w-3 h-3" />
+                              Coming Soon
+                            </span>
+                          )}
+                          {cat.on_waitlist && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-semibold rounded-full">
+                              <Check className="w-3 h-3" />
+                              On Waitlist
+                            </span>
+                          )}
+                          {isSelected && !isPremium && (
+                            <Check className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                        <p className="text-sm text-white/60 mt-1">{cat.description}</p>
                       </div>
-                      <p className="text-sm text-white/60">{cat.description}</p>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -161,10 +164,26 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
               'hover:opacity-90 disabled:opacity-50'
             )}
           >
-            Применить
+            Apply
           </button>
         </div>
       </div>
+
+      {/* Premium Coming Soon Modal */}
+      {premiumModalCategory && (
+        <PremiumComingSoonModal
+          category={{
+            name: premiumModalCategory.name,
+            emoji: premiumModalCategory.emoji,
+            price: premiumModalCategory.price,
+            description: premiumModalCategory.description,
+            id: premiumModalCategory.id,
+          }}
+          onClose={() => setPremiumModalCategory(null)}
+          onJoinWaitlist={handleJoinWaitlist}
+          isOnWaitlist={premiumModalCategory.on_waitlist}
+        />
+      )}
     </div>
   );
 };

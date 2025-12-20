@@ -1,9 +1,16 @@
 export interface Category {
   id: number;
-  code: string;
+  code?: string;  // Legacy field
+  slug: string;
   name: string;
-  icon?: string;
+  icon?: string;  // Legacy field
+  emoji: string;
+  description: string;
   is_premium: boolean;
+  price: number;
+  access_days: number | null;
+  coming_soon: boolean;
+  on_waitlist: boolean;
 }
 
 export interface StepItem {
