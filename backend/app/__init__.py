@@ -15,15 +15,10 @@ def get_limiter_storage():
         return f"redis://{redis_url.split('://')[-1]}"
     return "memory://"
 
-def is_options_request():
-    """Exempt OPTIONS requests from rate limiting (CORS preflight)"""
-    return request.method == 'OPTIONS'
-
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri=get_limiter_storage(),
-    request_filter=is_options_request
+    storage_uri=get_limiter_storage()
 )
 
 def create_app(config_name='default'):
@@ -35,6 +30,11 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db)
     limiter.init_app(app)
+
+    # Exempt OPTIONS requests from rate limiting (CORS preflight)
+    @limiter.request_filter
+    def exempt_options():
+        return request.method == 'OPTIONS'
 
     cors_origins = app.config.get('CORS_ORIGINS')
     if not cors_origins:

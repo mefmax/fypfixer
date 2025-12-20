@@ -20,7 +20,13 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   const [isCompleting, setIsCompleting] = useState(false);
 
   const handleComplete = async () => {
-    if (completed || isCompleting) return;
+    if (isCompleting) return;
+
+    // TODO: Add uncomplete functionality when backend supports it
+    if (completed) {
+      console.log('Uncomplete not yet implemented');
+      return;
+    }
 
     setIsCompleting(true);
     try {
@@ -74,11 +80,11 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           {/* Checkbox */}
           <button
             onClick={handleComplete}
-            disabled={completed || isCompleting}
+            disabled={isCompleting}
             className={clsx(
               'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
               completed
-                ? 'bg-green-500 border-green-500'
+                ? 'bg-green-500 border-green-500 cursor-not-allowed'
                 : 'border-white/30 hover:border-teal-500',
               isCompleting && 'opacity-50 cursor-wait'
             )}
