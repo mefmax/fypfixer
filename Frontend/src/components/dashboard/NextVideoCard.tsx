@@ -101,7 +101,7 @@ export const NextVideoCard: React.FC<NextVideoCardProps> = ({
 
           {/* Disclaimer */}
           <p className="mt-4 text-[10px] text-slate-500">
-            FYPFixer never automates actions. You open and interact with videos manually in the TikTok app.
+            FYPGlow never automates actions. You open and interact with videos manually in the TikTok app.
           </p>
         </div>
       </div>

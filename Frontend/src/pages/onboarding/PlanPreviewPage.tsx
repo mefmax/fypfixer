@@ -119,7 +119,7 @@ export const PlanPreviewPage: React.FC = () => {
         <header className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Film className="h-6 w-6 text-teal-400" />
-            <span className="text-xl font-semibold text-white">FYPFixer</span>
+            <span className="text-xl font-semibold text-white">FYPGlow</span>
           </div>
           <span className="text-sm font-medium text-teal-400">Week 1 · Day 1</span>
         </header>
@@ -301,7 +301,7 @@ export const PlanPreviewPage: React.FC = () => {
           </Button>
 
           <p className="mt-2 mb-4 max-w-md text-center text-xs text-slate-500">
-            FYPFixer only creates manual action plans. All TikTok actions are performed by you, on your device,
+            FYPGlow only creates manual action plans. All TikTok actions are performed by you, on your device,
             using official apps.
           </p>
 

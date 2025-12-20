@@ -104,7 +104,7 @@ export const DashboardPageV0: React.FC = () => {
         {/* Footer Microcopy */}
         <div className="mt-10 pb-8 text-center">
           <p className="text-xs text-slate-500">
-            You're always in control. FYPFixer only suggests manual actions — you decide what to do in TikTok.
+            You're always in control. FYPGlow only suggests manual actions — you decide what to do in TikTok.
           </p>
         </div>
       </div>

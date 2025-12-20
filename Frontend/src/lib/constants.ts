@@ -1,4 +1,4 @@
-export const APP_NAME = 'FYPFixer';
+export const APP_NAME = 'FYPGlow';
 
 export const LANGUAGES = [
   { code: 'en', name: 'English' },

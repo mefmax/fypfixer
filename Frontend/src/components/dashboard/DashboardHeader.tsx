@@ -23,7 +23,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <div>
         <div className="flex items-center gap-2">
           <Film className="h-6 w-6 text-teal-400" />
-          <span className="text-xl font-semibold text-white">FYPFixer</span>
+          <span className="text-xl font-semibold text-white">FYPGlow</span>
         </div>
         <p className="mt-1 text-sm text-slate-400">Your daily personal growth companion</p>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.svg';
 
 interface LandingPageProps {
   className?: string;
@@ -27,7 +28,8 @@ export function LandingPage({ className = '' }: LandingPageProps) {
         {/* Header */}
         <header className="text-center">
           <h1 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-            FYPFixer <span role="img" aria-label="target">🎯</span>
+            <img src={logo} alt="FYPGlow" className="w-8 h-8" />
+            FYPGlow
           </h1>
         </header>
 
@@ -35,10 +37,10 @@ export function LandingPage({ className = '' }: LandingPageProps) {
         <section className="text-center space-y-4">
           <h2 className="text-4xl font-bold text-white leading-tight">
             <span className="bg-gradient-to-r from-[#208E9F] to-[#FF6B35] bg-clip-text text-transparent">
-              Tame Your TikTok Feed
+              Glow up your life. Detox your feed.
             </span>
           </h2>
-          <p className="text-base text-[#B0B0B0]">Get a daily plan to fix your For You page.</p>
+          <p className="text-base text-[#B0B0B0]">Get a daily plan to transform your For You page.</p>
         </section>
 
         {/* Input Section */}

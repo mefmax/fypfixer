@@ -9,7 +9,7 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          FYPFixer
+          FYPGlow
         </h1>
 
         <div className="flex items-center gap-3">

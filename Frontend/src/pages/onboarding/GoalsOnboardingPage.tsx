@@ -182,25 +182,25 @@ export const GoalsOnboardingPage: React.FC = () => {
           {/* Logo */}
           <div className="mb-6 flex items-center justify-center gap-2">
             <Film className="h-7 w-7 text-teal-400" />
-            <span className="text-xl font-semibold text-white">FYPFixer</span>
+            <span className="text-xl font-semibold text-white">FYPGlow</span>
           </div>
 
           {/* Welcome Text */}
-          <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">Welcome to FYPFixer</h1>
+          <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">Welcome to FYPGlow</h1>
           {user?.username ? (
             <p className="mb-4 text-lg text-slate-300">Nice to meet you, {user.username} 👋</p>
           ) : (
             <p className="mb-4 text-lg text-slate-300">Let's retrain your TikTok feed the right way.</p>
           )}
           <p className="mx-auto max-w-xl text-slate-400">
-            Tell us what you want to fix in your FYP and we'll build a step-by-step action plan tailored to you.
+            Tell us what you want to glow up in your FYP and we'll build a step-by-step action plan tailored to you.
           </p>
         </div>
 
         {/* How It Works Section */}
         <div className="mb-10">
           <p className="mb-4 text-center text-xs font-semibold uppercase tracking-wider text-teal-400">
-            How FYPFixer works
+            How FYPGlow works
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {howItWorks.map((step, index) => {
