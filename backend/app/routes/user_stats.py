@@ -20,13 +20,12 @@ def get_user_stats():
     """
     Get user statistics and gamification data.
 
-    Response:
+    Response (camelCase for frontend compatibility):
     {
         "success": true,
         "data": {
-            "streak": {"current": 5, "max": 12, "status": "active"},
-            "engagement": {"totalActions": 45, "totalDays": 10},
-            "gamification": {"level": "Explorer", "xp": 250}
+            "streak": {"currentStreak": 5, "longestStreak": 12, "lastActiveDate": "2024-01-15", "nextMilestone": 7},
+            "gamification": {"level": "Explorer", "xp": 250, "actionsCompleted": 45, "plansCompleted": 10}
         }
     }
     """
@@ -35,23 +34,20 @@ def get_user_stats():
     stats = streak_service.get_or_create_stats(user_id)
     streak_status = streak_service.check_streak_status(user_id)
 
+    # Return camelCase fields to match frontend expectations
     return success_response({
         'streak': {
-            'current': stats.current_streak_days,
-            'max': stats.max_streak_days,
-            'status': streak_status['status'],
-            'nextMilestone': streak_status['next_milestone'],
-        },
-        'engagement': {
-            'totalActions': stats.total_actions_completed,
-            'totalDays': stats.total_days_active,
-            'avgCompletionRate': float(stats.avg_completion_rate) if stats.avg_completion_rate else 0,
+            'currentStreak': stats.current_streak_days,
+            'longestStreak': stats.max_streak_days,
+            'lastActiveDate': stats.last_completed_date.isoformat() if stats.last_completed_date else None,
+            'nextMilestone': streak_status['nextMilestone'],
         },
         'gamification': {
             'level': stats.current_level,
             'xp': stats.total_xp,
-            'achievements': stats.achievements or [],
-        }
+            'actionsCompleted': stats.total_actions_completed,
+            'plansCompleted': stats.total_days_active,
+        },
     })
 
 

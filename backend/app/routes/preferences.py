@@ -6,8 +6,14 @@ from app.models import UserPreferences
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 from app.services.analytics_service import analytics_service
+from app.services.settings_service import settings_service
 
 preferences_bp = Blueprint('preferences', __name__)
+
+
+def _get_default_category() -> str:
+    """Get default category from settings."""
+    return settings_service.get_default_category_code() or 'fitness'
 
 
 @preferences_bp.route('/preferences', methods=['GET'])
@@ -20,7 +26,7 @@ def get_preferences():
         return success_response({
             'hasCompletedOnboarding': False,
             'selectedGoals': [],
-            'preferredCategory': 'personal_growth',
+            'preferredCategory': _get_default_category(),
             'language': 'en',
         })
 
@@ -58,6 +64,7 @@ def update_preferences():
         'hasCompletedOnboarding': prefs.has_completed_onboarding,
         'selectedGoals': prefs.selected_goals,
         'preferredCategory': prefs.preferred_category,
+        'language': prefs.language,
     })
 
 
@@ -67,7 +74,7 @@ def complete_onboarding():
     """Mark onboarding complete with selected goals."""
     data = request.get_json() or {}
     goals = data.get('goals', [])
-    category = data.get('category', 'personal_growth')
+    category = data.get('category', _get_default_category())
 
     prefs = UserPreferences.query.filter_by(user_id=g.current_user_id).first()
     if not prefs:
