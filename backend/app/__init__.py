@@ -8,6 +8,7 @@ import os
 
 db = SQLAlchemy()
 migrate = Migrate()
+limiter = Limiter(key_func=get_remote_address)
 
 def get_limiter_storage():
     redis_url = os.environ.get('REDIS_URL')
@@ -15,17 +16,15 @@ def get_limiter_storage():
         return f"redis://{redis_url.split('://')[-1]}"
     return "memory://"
 
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri=get_limiter_storage()
-)
-
 def create_app(config_name='default'):
     from config import config
 
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+
+    # Configure rate limiting
+    app.config['RATELIMIT_STORAGE_URI'] = get_limiter_storage()
+    app.config['RATELIMIT_DEFAULT'] = "200 per day;50 per hour"
 
     db.init_app(app)
     migrate.init_app(app, db)
