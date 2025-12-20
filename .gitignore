@@ -1,0 +1,90 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.venv
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Translations (compiled)
+*.mo
+
+# Logs
+*.log
+
+# Секреты 
+.env
+.env.local
+# Documentation (internal)
+docs/
+daily/
+UI/
+Project days/
+
+# Frontend
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env
+Frontend/.env.local
+
+# Backend
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+.env
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+UsersmefAppDataLocalTempv0-fypf-ixer-temp/
+
+# Large files and archives
+*.7z
+*.zip
+*.rar
+*.tar.gz
+*.mp4
+*.avi
+*.mov
+
+# Embedded repos
+v0-designs/
+
+NUL

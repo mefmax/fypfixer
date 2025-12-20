@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FYPFixer - Tame Your TikTok Feed</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/fypfixer_logo.png') }}">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1a2e 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 120px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+        }
+
+        .logo img {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+        }
+
+        .lang-switcher {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            color: #e0e0e0;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .lang-switcher:hover {
+            background: rgba(255, 45, 85, 0.15);
+            border-color: #FF2D55;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hero h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 13px;
+            color: #b0b0b0;
+            margin: 0;
+        }
+
+        .category-group {
+            display: flex;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .category-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            position: relative;
+        }
+
+        .category-input::placeholder {
+            color: #707070;
+        }
+
+        .category-input:focus {
+            border-color: #FF2D55;
+            background: rgba(255, 45, 85, 0.1);
+        }
+
+        .disclaimer {
+            background: rgba(255, 45, 85, 0.15);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #d0d0d0;
+            line-height: 1.4;
+        }
+
+        .disclaimer strong {
+            color: #FF2D55;
+        }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .video-section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .video-card {
+            background: radial-gradient(circle at top left, rgba(255, 45, 85, 0.3), rgba(10, 14, 39, 0.9));
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 45, 85, 0.4);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .video-card:active {
+            transform: scale(0.98);
+        }
+
+        .video-thumb {
+            position: relative;
+            width: 100%;
+            padding-top: 70%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .video-thumb::after {
+            content: "▶";
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .video-meta {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .video-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+        }
+
+        .video-creator {
+            font-size: 11px;
+            color: #b0b0b0;
+            margin: 0;
+        }
+
+        .video-reason {
+            font-size: 10px;
+            color: #909090;
+            margin-top: 4px;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(10, 14, 39, 0.98);
+            border-top: 1px solid rgba(255, 45, 85, 0.1);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-open {
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            color: #fff;
+        }
+
+        .btn-next {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .plan-section {
+            margin-top: 16px;
+        }
+
+        .plan-section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 45, 85, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FF2D55 0%, #FF9F0A 100%);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .step-desc {
+            font-size: 11px;
+            color: #b0b0b0;
+            margin: 4px 0 0 0;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px 24px;
+                padding-bottom: 40px;
+            }
+
+            .action-buttons {
+                position: relative;
+                flex-direction: column;
+                padding: 24px;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 15px;
+            }
+
+            .video-thumb {
+                padding-top: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='images/fypfixer_logo.png') }}" alt="FYPFixer">
+                <span>FYPFixer</span>
+            </div>
+            <button class="lang-switcher" onclick="toggleLang()" id="lang-btn">🌐 EN</button>
+        </div>
+
+        <!-- HERO -->
+        <div class="hero">
+            <h1>Tame Your Feed</h1>
+            <p>Get a daily plan to fix your TikTok For You page.</p>
+        </div>
+
+        <!-- CATEGORY SELECT -->
+        <div class="category-group">
+            <input 
+                type="text" 
+                class="category-input" 
+                id="category-input" 
+                placeholder="personal_growth, fitness, education..."
+                autocomplete="off"
+            >
+            <button class="btn-primary" onclick="getPlan()">Get Plan</button>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disclaimer">
+            🛡️ <strong>Safe:</strong> We never log in, use bots, or auto-like. Just a simple checklist for you.
+        </div>
+
+        <!-- TODAY'S VIDEO -->
+        <div class="video-section">
+            <h2>Today's Video</h2>
+            <div id="video-card-container">
+                <div style="color: #808080; font-size: 13px; text-align: center; padding: 40px 20px;">
+                    Loading your first video...
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAN STEPS -->
+        <div class="plan-section" id="plan-section" style="display:none;">
+            <h2>Your Plan</h2>
+            <div class="steps" id="steps-container"></div>
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+        <button class="btn-action btn-open" onclick="openInTikTok()" id="btn-open-tiktok">
+            Open in TikTok
+        </button>
+        <button class="btn-action btn-next" onclick="nextVideo()">
+            Next Video
+        </button>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                title: 'Tame Your Feed',
+                subtitle: 'Get a daily plan to fix your TikTok For You page.',
+                placeholder: 'personal_growth, fitness, education...',
+                get_plan: 'Get Plan',
+                safe: 'Safe:',
+                disclaimer: 'We never log in, use bots, or auto-like. Just a simple checklist for you.',
+                today_video: "Today's Video",
+                loading: 'Loading your first video...',
+                no_videos: 'No videos in the plan yet',
+                your_plan: 'Your Plan',
+                open_tiktok: 'Open in TikTok',
+                next_video: 'Next Video'
+            },
+            ru: {
+                title: 'Укроти ленту',
+                subtitle: 'Получи ежедневный план, чтобы навести порядок в ленте TikTok.',
+                placeholder: 'personal_growth, фитнес, образование...',
+                get_plan: 'Получить план',
+                safe: 'Безопасно:',
+                disclaimer: 'Мы не входим в аккаунт, не используем ботов и автолайки. Только чек‑лист действий.',
+                today_video: 'Сегодняшнее видео',
+                loading: 'Загружаем первое видео...',
+                no_videos: 'В плане пока нет видео',
+                your_plan: 'Твой план',
+                open_tiktok: 'Открыть в TikTok',
+                next_video: 'Следующее видео'
+            },
+            es: {
+                title: 'Domina tu feed',
+                subtitle: 'Obtén un plan diario para arreglar tu página Para ti de TikTok.',
+                placeholder: 'crecimiento_personal, fitness, educación...',
+                get_plan: 'Obtener plan',
+                safe: 'Seguro:',
+                disclaimer: 'Nunca iniciamos sesión, usamos bots ni auto‑likes. Solo una lista sencilla para ti.',
+                today_video: 'Video de hoy',
+                loading: 'Cargando tu primer video...',
+                no_videos: 'Todavía no hay videos en el plan',
+                your_plan: 'Tu plan',
+                open_tiktok: 'Abrir en TikTok',
+                next_video: 'Siguiente video'
+            }
+        };
+
+        function getCurrentLang() {
+            const urlLang = new URLSearchParams(window.location.search).get('lang');
+            if (urlLang) return urlLang;
+            const saved = localStorage.getItem('fypfixer_lang');
+            return saved || 'en';
+        }
+
+        function t(key) {
+            const lang = getCurrentLang();
+            return (translations[lang] && translations[lang][key]) || translations.en[key] || key;
+        }
+
+        function updatePageTexts() {
+            document.querySelector('.hero h1').textContent = t('title');
+            document.querySelector('.hero p').textContent = t('subtitle');
+
+            const input = document.getElementById('category-input');
+            if (input) input.placeholder = t('placeholder');
+
+            const primaryBtn = document.querySelector('.btn-primary');
+            if (primaryBtn) primaryBtn.textContent = t('get_plan');
+
+            const disc = document.querySelector('.disclaimer');
+            if (disc) {
+                const strong = disc.querySelector('strong');
+                if (strong) strong.textContent = t('safe');
+                const tail = disc.childNodes[disc.childNodes.length - 1];
+                if (tail && tail.nodeType === Node.TEXT_NODE) {
+                    tail.textContent = ' ' + t('disclaimer');
+                }
+            }
+
+            const vTitle = document.querySelector('.video-section h2');
+            if (vTitle) vTitle.textContent = t('today_video');
+
+            const planTitle = document.querySelector('.plan-section h2');
+            if (planTitle) planTitle.textContent = t('your_plan');
+
+            const openBtn = document.getElementById('btn-open-tiktok');
+            if (openBtn) openBtn.textContent = t('open_tiktok');
+
+            const nextBtn = document.querySelector('.btn-next');
+            if (nextBtn) nextBtn.textContent = t('next_video');
+        }
+
+        function updateLangButton() {
+            const map = { en: '🌐 EN', ru: '🌐 RU', es: '🌐 ES' };
+            const btn = document.getElementById('lang-btn');
+            if (btn) btn.textContent = map[getCurrentLang()] || '🌐 EN';
+        }
+
+        function toggleLang() {
+            const langs = ['en', 'ru', 'es'];
+            const current = getCurrentLang();
+            const idx = langs.indexOf(current);
+            const nextLang = langs[(idx + 1) % langs.length];
+
+            localStorage.setItem('fypfixer_lang', nextLang);
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', nextLang);
+            window.history.replaceState({}, '', url.toString());
+
+            updateLangButton();
+            updatePageTexts();
+        }
+
+        let currentItems = [];
+        let currentIndex = 0;
+        let currentVideoUrl = '';
+
+        function fetchVideoPlan(category = 'personal_growth') {
+            const lang = getCurrentLang();
+            const url = `/api/plan?lang=${encodeURIComponent(lang)}&category=${encodeURIComponent(category)}`;
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.steps || !data.steps.length || !data.steps[0].items || !data.steps[0].items.length) {
+                        document.getElementById('video-card-container').innerHTML =
+                            `<div style="color:#808080;font-size:13px;">${t('no_videos')}</div>`;
+                        renderPlan(data);
+                        return;
+                    }
+                    currentItems = data.steps[0].items;
+                    currentIndex = 0;
+                    renderCurrentVideo();
+                    renderPlan(data);
+                })
+                .catch(err => console.error('Error loading plan', err));
+        }
+
+        function renderCurrentVideo() {
+            if (!currentItems.length) return;
+            const item = currentItems[currentIndex];
+            const container = document.getElementById('video-card-container');
+
+            const safeTitle = item.title || 'TikTok video';
+            const safeCreator = item.creator || '@creator';
+            const safeReason = item.reason || '';
+            const thumb = item.thumbnail_url || '{{ url_for("static", filename="images/fypfixer_logo2.png") }}';
+            currentVideoUrl = item.video_url || '';
+
+            container.innerHTML = `
+                <div class="video-card" onclick="openInTikTok()">
+                    <div class="video-thumb" style="background-image:url('${thumb}');"></div>
+                    <div class="video-meta">
+                        <div class="video-title">${safeTitle}</div>
+                        <div class="video-creator">${safeCreator}</div>
+                        ${safeReason ? `<div class="video-reason">${safeReason}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+function renderPlan(data) {
+    const planSection = document.getElementById('plan-section');
+    const stepsContainer = document.getElementById('steps-container');
+
+    if (!data.steps || !data.steps.length) {
+        stepsContainer.innerHTML = '<div style="font-size:12px;color:#b0b0b0;">No steps in the plan yet</div>';
+        planSection.style.display = 'block';
+        return;
+    }
+
+    const planKey = `fypfixer_progress_${data.plan_date || 'demo'}_${data.category_code || 'personal_growth'}`;
+    const steps = data.steps;
+    const totalSteps = steps.length;
+
+    // загрузить сохранённый прогресс
+    let completedSteps = [];
+    try {
+        const saved = localStorage.getItem(planKey);
+        if (saved) completedSteps = JSON.parse(saved);
+    } catch (e) {
+        completedSteps = [];
+    }
+
+    let completed = completedSteps.length;
+
+    stepsContainer.innerHTML = `
+        <div id="plan-progress-text" style="font-size:11px;color:#b0b0b0;margin-bottom:6px;">
+            ${completed} of ${totalSteps} steps completed
+        </div>
+    ` + steps.map((step, idx) => {
+        const stepKey = `step_${idx}`;
+        const isChecked = completedSteps.includes(stepKey) ? 'checked' : '';
+        const text = step.text || ('Step ' + (idx + 1));
+        return `
+            <label class="step" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+                <input type="checkbox"
+                       data-step-key="${stepKey}"
+                       ${isChecked}
+                       style="margin-top:4px;accent-color:#FF2D55;">
+                <div>
+                    <div class="step-number">${idx + 1}</div>
+                    <p class="step-title">${text}</p>
+                </div>
+            </label>
+        `;
+    }).join('');
+
+    const progressText = document.getElementById('plan-progress-text');
+    const checkboxes = stepsContainer.querySelectorAll('input[type="checkbox"]');
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            const stepKey = cb.getAttribute('data-step-key');
+            if (cb.checked) {
+                if (!completedSteps.includes(stepKey)) {
+                    completedSteps.push(stepKey);
+                }
+            } else {
+                completedSteps = completedSteps.filter(k => k !== stepKey);
+            }
+            completed = completedSteps.length;
+            localStorage.setItem(planKey, JSON.stringify(completedSteps));
+            progressText.textContent = `${completed} of ${totalSteps} steps completed`;
+        });
+    });
+
+    planSection.style.display = 'block';
+}
+
+
+        function openInTikTok() {
+            if (!currentVideoUrl) return;
+            window.open(currentVideoUrl, '_blank');
+        }
+
+        function nextVideo() {
+            if (!currentItems.length) return;
+            currentIndex = (currentIndex + 1) % currentItems.length;
+            renderCurrentVideo();
+        }
+
+        function getPlan() {
+            const category = document.getElementById('category-input').value.trim() || 'personal_growth';
+            fetchVideoPlan(category);
+        }
+
+        // init
+        updateLangButton();
+        updatePageTexts();
+        fetchVideoPlan();
+    </script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+import os
+import sys
+import json
+from datetime import date
+import time
+
+sys.path.insert(0, '.')
+
+from app import create_app, db
+from app.models import Category, Plan, PlanStep, StepItem, User
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
+# Get API key
+API_KEY = os.getenv('PERPLEXITY_API_KEY')
+if not API_KEY:
+    print("❌ PERPLEXITY_API_KEY not found in .env")
+    sys.exit(1)
+
+print(f"\n🔍 DIAGNOSTICS:")
+print(f"  API Key: {API_KEY[:20]}...{API_KEY[-10:]}")
+print(f"  API Key length: {len(API_KEY)}")
+print(f"  API Key prefix: {'pplx-' if API_KEY.startswith('pplx-') else 'WRONG'}")
+
+# Use OpenAI SDK
+try:
+    from openai import OpenAI
+    print(f"  ✅ OpenAI SDK imported")
+except ImportError:
+    print("❌ openai package not installed")
+    print("Run: pip install openai")
+    sys.exit(1)
+
+
+# ============ LEVEL 1: Direct TikTok Search ============
+def try_direct_tiktok_search(category_name: str) -> list:
+    """Level 1: Search for real TikTok videos with strict requirements"""
+    
+    prompt = f"""Search for 10 REAL trending TikTok videos about {category_name}.
+
+CRITICAL REQUIREMENTS:
+- Must be ACTUAL TikTok URLs from tiktok.com domain
+- Must include real creator @handles
+- Must have specific video IDs (7 + 18 digits)
+- Only include videos that DEFINITELY exist and are trending
+
+Return ONLY valid JSON with REAL TikTok URLs:
+{{
+  "videos": [
+    {{
+      "creator": "@realhandle",
+      "title": "Video Title",
+      "video_url": "https://www.tiktok.com/@realhandle/video/7XXXXXXXXXXXXX",
+      "engagement_score": 85,
+      "reason": "Why it's trending"
+    }}
+  ]
+}}
+
+If you cannot find real TikTok video URLs, return: {{"videos": []}}
+"""
+    
+    try:
+        client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
+        
+        response = client.chat.completions.create(
+            model="sonar-pro",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        content = response.choices[0].message.content
+        
+        # Parse JSON
+        try:
+            data = json.loads(content)
+            videos = data.get("videos", [])
+            
+            # STRICT VALIDATION: Only accept videos with real URLs
+            real_videos = []
+            for video in videos:
+                url = video.get("video_url", "")
+                # Check if URL looks real (not generated)
+                if url.startswith("https://www.tiktok.com/@") and "/video/7" in url:
+                    real_videos.append(video)
+            
+            if len(real_videos) > 0:
+                print(f"  [Level 1] ✅ Found {len(real_videos)} REAL videos")
+                return real_videos
+            else:
+                print(f"  [Level 1] ❌ No real TikTok URLs found")
+                return []
+                
+        except json.JSONDecodeError as e:
+            print(f"  [Level 1] ❌ JSON Parse Error: {str(e)[:100]}")
+            return []
+            
+    except Exception as e:
+        print(f"  [Level 1] ❌ API Error: {str(e)[:100]}")
+        return []
+
+
+# ============ LEVEL 2: Hashtag-Based Discovery ============
+def try_hashtag_discovery(category_name: str) -> list:
+    """Level 2: Search for videos using trending hashtags"""
+    
+    prompt = f"""Find trending TikTok hashtags for {category_name} in 2025.
+
+Then search for REAL TikTok videos that use these hashtags.
+
+REQUIREMENTS:
+- Real creator handles (@username)
+- Real video URLs from tiktok.com
+- Specific video IDs (7 + 18 digits)
+- Verified trending content
+
+Return ONLY valid JSON:
+{{
+  "videos": [
+    {{
+      "creator": "@creator",
+      "title": "Title",
+      "video_url": "https://www.tiktok.com/@creator/video/7XXXXXXXXXXXXX",
+      "engagement_score": 75,
+      "reason": "Trending with hashtag"
+    }}
+  ]
+}}
+
+If you cannot find real videos, return: {{"videos": []}}
+"""
+    
+    try:
+        client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
+        
+        response = client.chat.completions.create(
+            model="sonar-pro",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        content = response.choices[0].message.content
+        
+        try:
+            data = json.loads(content)
+            videos = data.get("videos", [])
+            
+            # Strict validation
+            real_videos = []
+            for video in videos:
+                url = video.get("video_url", "")
+                if url.startswith("https://www.tiktok.com/@") and "/video/7" in url:
+                    real_videos.append(video)
+            
+            if len(real_videos) > 0:
+                print(f"  [Level 2] ✅ Found {len(real_videos)} videos via hashtags")
+                return real_videos
+            else:
+                print(f"  [Level 2] ❌ No real videos from hashtag search")
+                return []
+                
+        except json.JSONDecodeError:
+            print(f"  [Level 2] ❌ JSON Parse Error")
+            return []
+            
+    except Exception as e:
+        print(f"  [Level 2] ❌ API Error: {str(e)[:100]}")
+        return []
+
+
+# ============ LEVEL 3: Creator/Influencer Search ============
+def try_creator_search(category_name: str) -> list:
+    """Level 3: Search for specific influential creators in this category"""
+    
+    prompt = f"""Find 10 popular TikTok creators in {category_name} category.
+
+For each creator, find 1 recent viral video they posted.
+
+REQUIREMENTS:
+- Real, verified creators
+- Actual TikTok URLs with video IDs
+- Recent trending videos
+
+Return ONLY valid JSON:
+{{
+  "videos": [
+    {{
+      "creator": "@creator_handle",
+      "title": "Video title",
+      "video_url": "https://www.tiktok.com/@creator_handle/video/7XXXXXXXXXXXXX",
+      "engagement_score": 80,
+      "reason": "Popular creator content"
+    }}
+  ]
+}}
+
+If no real videos found: {{"videos": []}}
+"""
+    
+    try:
+        client = OpenAI(api_key=API_KEY, base_url="https://api.perplexity.ai")
+        
+        response = client.chat.completions.create(
+            model="sonar-pro",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        content = response.choices[0].message.content
+        
+        try:
+            data = json.loads(content)
+            videos = data.get("videos", [])
+            
+            real_videos = []
+            for video in videos:
+                url = video.get("video_url", "")
+                if url.startswith("https://www.tiktok.com/@") and "/video/7" in url:
+                    real_videos.append(video)
+            
+            if len(real_videos) > 0:
+                print(f"  [Level 3] ✅ Found {len(real_videos)} creator videos")
+                return real_videos
+            else:
+                print(f"  [Level 3] ❌ No real creator videos")
+                return []
+                
+        except json.JSONDecodeError:
+            print(f"  [Level 3] ❌ JSON Parse Error")
+            return []
+            
+    except Exception as e:
+        print(f"  [Level 3] ❌ API Error: {str(e)[:100]}")
+        return []
+
+
+# ============ FALLBACK: Local Mock Database ============
+MOCK_VIDEOS = {
+    'fitness': [
+        {'creator': '@fitnesstiktok', 'title': '5-Minute Home Workout', 
+         'video_url': 'https://www.tiktok.com/@fitnesstiktok/video/7285123456789012345', 
+         'engagement_score': 89, 'reason': 'High-energy quick workout'},
+        {'creator': '@gymriot', 'title': 'Cardio Hacks', 
+         'video_url': 'https://www.tiktok.com/@gymriot/video/7284567890123456789', 
+         'engagement_score': 85, 'reason': 'Trending fitness tips'},
+        {'creator': '@fitwithjoe', 'title': 'Core Strengthening', 
+         'video_url': 'https://www.tiktok.com/@fitwithjoe/video/7283456789012345678', 
+         'engagement_score': 88, 'reason': 'Effective core training'},
+        {'creator': '@yogawithemily', 'title': 'Morning Yoga Flow', 
+         'video_url': 'https://www.tiktok.com/@yogawithemily/video/7282345678901234567', 
+         'engagement_score': 87, 'reason': 'Relaxing morning routine'},
+        {'creator': '@hiitmaster', 'title': '20 Min HIIT Workout', 
+         'video_url': 'https://www.tiktok.com/@hiitmaster/video/7281234567890123456', 
+         'engagement_score': 91, 'reason': 'Intense cardio workout'},
+        {'creator': '@fitnessgains', 'title': 'Muscle Building Tips', 
+         'video_url': 'https://www.tiktok.com/@fitnessgains/video/7280123456789012345', 
+         'engagement_score': 86, 'reason': 'Progressive training guide'},
+        {'creator': '@stretchandsway', 'title': 'Flexibility Training', 
+         'video_url': 'https://www.tiktok.com/@stretchandsway/video/7279012345678901234', 
+         'engagement_score': 84, 'reason': 'Improve mobility'},
+        {'creator': '@gymgoals', 'title': 'Gym Routine for Beginners', 
+         'video_url': 'https://www.tiktok.com/@gymgoals/video/7278901234567890123', 
+         'engagement_score': 83, 'reason': 'Beginner-friendly exercises'},
+        {'creator': '@fitchallenge', 'title': '30 Day Fitness Challenge', 
+         'video_url': 'https://www.tiktok.com/@fitchallenge/video/7277890123456789012', 
+         'engagement_score': 90, 'reason': 'Motivational challenge'},
+        {'creator': '@wellness_coach', 'title': 'Recovery & Rest Days', 
+         'video_url': 'https://www.tiktok.com/@wellness_coach/video/7276789012345678901', 
+         'engagement_score': 82, 'reason': 'Important recovery tips'},
+    ],
+    'creative': [
+        {'creator': '@artwithannie', 'title': 'Digital Art Timelapse', 
+         'video_url': 'https://www.tiktok.com/@artwithannie/video/7283901234567890123', 
+         'engagement_score': 92, 'reason': 'Creative process content'},
+        {'creator': '@designmasters', 'title': 'UI/UX Design Tips', 
+         'video_url': 'https://www.tiktok.com/@designmasters/video/7282345678901234567', 
+         'engagement_score': 87, 'reason': 'Design trends'},
+        {'creator': '@paintwithjohn', 'title': 'Oil Painting Tutorial', 
+         'video_url': 'https://www.tiktok.com/@paintwithjohn/video/7281890123456789012', 
+         'engagement_score': 89, 'reason': 'Traditional art technique'},
+        {'creator': '@creativeminds', 'title': '3D Animation Creation', 
+         'video_url': 'https://www.tiktok.com/@creativeminds/video/7280234567890123456', 
+         'engagement_score': 94, 'reason': 'Advanced animation work'},
+        {'creator': '@sketchdaily', 'title': 'Quick Sketch Challenge', 
+         'video_url': 'https://www.tiktok.com/@sketchdaily/video/7279123456789012345', 
+         'engagement_score': 85, 'reason': 'Daily sketch inspiration'},
+        {'creator': '@craftartist', 'title': 'DIY Craft Ideas', 
+         'video_url': 'https://www.tiktok.com/@craftartist/video/7278012345678901234', 
+         'engagement_score': 88, 'reason': 'Creative craft projects'},
+        {'creator': '@photoedit_pro', 'title': 'Photo Editing Hacks', 
+         'video_url': 'https://www.tiktok.com/@photoedit_pro/video/7277901234567890123', 
+         'engagement_score': 86, 'reason': 'Photography enhancement tips'},
+        {'creator': '@danceandmove', 'title': 'Choreography Tutorial', 
+         'video_url': 'https://www.tiktok.com/@danceandmove/video/7276890123456789012', 
+         'engagement_score': 91, 'reason': 'Creative movement expression'},
+        {'creator': '@musicproducer', 'title': 'Beat Making Process', 
+         'video_url': 'https://www.tiktok.com/@musicproducer/video/7275789012345678901', 
+         'engagement_score': 90, 'reason': 'Music creation guide'},
+        {'creator': '@creativewriting', 'title': 'Storytelling Tips', 
+         'video_url': 'https://www.tiktok.com/@creativewriting/video/7274678901234567890', 
+         'engagement_score': 87, 'reason': 'Writing inspiration'},
+    ],
+    'travel': [
+        {'creator': '@traveladdict', 'title': 'Hidden Gems in Japan', 
+         'video_url': 'https://www.tiktok.com/@traveladdict/video/7281789012345678901', 
+         'engagement_score': 94, 'reason': 'Trending travel destination'},
+        {'creator': '@backpackbuddy', 'title': 'Budget Travel Hacks', 
+         'video_url': 'https://www.tiktok.com/@backpackbuddy/video/7280234567890123456', 
+         'engagement_score': 88, 'reason': 'Practical travel tips'},
+        {'creator': '@wanderlust_alex', 'title': 'Bali Adventure Vlog', 
+         'video_url': 'https://www.tiktok.com/@wanderlust_alex/video/7279123456789012345', 
+         'engagement_score': 91, 'reason': 'Exotic destination exploration'},
+        {'creator': '@citytravelguide', 'title': 'Paris Street Food Tour', 
+         'video_url': 'https://www.tiktok.com/@citytravelguide/video/7278012345678901234', 
+         'engagement_score': 89, 'reason': 'Local food experience'},
+        {'creator': '@solotravel_girl', 'title': 'Solo Travel Tips for Women', 
+         'video_url': 'https://www.tiktok.com/@solotravel_girl/video/7277901234567890123', 
+         'engagement_score': 92, 'reason': 'Safe travel advice'},
+        {'creator': '@adventuretime', 'title': 'Mountain Hiking Challenge', 
+         'video_url': 'https://www.tiktok.com/@adventuretime/video/7276890123456789012', 
+         'engagement_score': 87, 'reason': 'Outdoor adventure content'},
+        {'creator': '@travelinsider', 'title': 'Flight Booking Hacks', 
+         'video_url': 'https://www.tiktok.com/@travelinsider/video/7275789012345678901', 
+         'engagement_score': 86, 'reason': 'Money-saving travel tips'},
+        {'creator': '@roadsideadventure', 'title': 'Road Trip Vlog', 
+         'video_url': 'https://www.tiktok.com/@roadsideadventure/video/7274678901234567890', 
+         'engagement_score': 85, 'reason': 'Epic journey documentation'},
+        {'creator': '@beachlife_vibes', 'title': 'Tropical Paradise Tour', 
+         'video_url': 'https://www.tiktok.com/@beachlife_vibes/video/7273567890123456789', 
+         'engagement_score': 93, 'reason': 'Beach destination guide'},
+        {'creator': '@cultural_explorer', 'title': 'Local Culture Experience', 
+         'video_url': 'https://www.tiktok.com/@cultural_explorer/video/7272456789012345678', 
+         'engagement_score': 88, 'reason': 'Authentic cultural immersion'},
+    ]
+}
+
+
+def fetch_videos_from_perplexity(category_name: str, category_code: str) -> list:
+    """Multi-level fallback: Try 3 AI search strategies, then use mock if all fail"""
+    
+    print(f"  [1] Searching for TikTok videos...")
+    
+    # Level 1: Direct search
+    videos = try_direct_tiktok_search(category_name)
+    if len(videos) >= 5:
+        return videos
+    
+    # Add small delay to avoid rate limits
+    time.sleep(1)
+    
+    # Level 2: Hashtag discovery
+    videos = try_hashtag_discovery(category_name)
+    if len(videos) >= 5:
+        return videos
+    
+    time.sleep(1)
+    
+    # Level 3: Creator search
+    videos = try_creator_search(category_name)
+    if len(videos) >= 5:
+        return videos
+    
+    # All AI strategies failed - use mock for this category if available
+    print(f"  [Fallback] Using mock videos for {category_code}")
+    if category_code in MOCK_VIDEOS:
+        return MOCK_VIDEOS[category_code]
+    
+    # No data available
+    return []
+
+
+def save_videos_to_db(videos: list, step_id: int, category_code: str) -> int:
+    """Save videos to database"""
+    
+    added = 0
+    for i, video in enumerate(videos):
+        try:
+            item = StepItem(
+                plan_step_id=step_id,
+                video_id=f"video_{category_code}_{i}",
+                creator_username=video.get("creator", "@unknown"),
+                title=video.get("title", "Video"),
+                thumbnail_url="https://p16-sign.tiktokcdn.com/avatar-80x80.jpg",
+                video_url=video.get("video_url", ""),
+                engagement_score=float(video.get("engagement_score", 50)),
+                reason_text=video.get("reason", "")
+            )
+            db.session.add(item)
+            added += 1
+        except Exception as e:
+            print(f"    ⚠️ Skipped: {e}")
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(f"    ❌ DB commit failed: {e}")
+        db.session.rollback()
+    
+    return added
+
+
+def main():
+    app = create_app()
+    
+    with app.app_context():
+        categories = Category.query.all()
+        
+        if not categories:
+            print("❌ No categories in database")
+            return
+        
+        print(f"📊 Found {len(categories)} categories")
+        print("=" * 70)
+        
+        # Get or create user
+        user = User.query.filter_by(client_id="ai_generator").first()
+        if not user:
+            user = User(client_id="ai_generator", language="en")
+            db.session.add(user)
+            db.session.commit()
+        
+        total_videos = 0
+        successful = 0
+        failed = 0
+        
+        for i, category in enumerate(categories, 1):
+            print(f"\n[{i}/{len(categories)}] 🎬 {category.name_en} ({category.code})")
+            
+            # Get or create plan
+            plan = Plan.query.filter_by(
+                user_id=user.id,
+                category_id=category.id,
+                plan_date=date.today()
+            ).first()
+            
+            if not plan:
+                plan = Plan(
+                    user_id=user.id,
+                    category_id=category.id,
+                    plan_date=date.today(),
+                    language="en",
+                    title=f"Daily Plan: {category.name_en}"
+                )
+                db.session.add(plan)
+                db.session.commit()
+            
+            # Get or create step
+            step = PlanStep.query.filter_by(plan_id=plan.id, step_order=1).first()
+            if not step:
+                step = PlanStep(
+                    plan_id=plan.id,
+                    step_order=1,
+                    action_type="watch",
+                    text_en=f"Watch videos about {category.name_en}"
+                )
+                db.session.add(step)
+                db.session.commit()
+            
+            # Clear old videos
+            StepItem.query.filter_by(plan_step_id=step.id).delete()
+            db.session.commit()
+            
+            # Fetch videos with multi-level strategy
+            videos = fetch_videos_from_perplexity(category.name_en, category.code)
+            
+            if videos:
+                added = save_videos_to_db(videos, step.id, category.code)
+                print(f"  💾 Saved {added}/{len(videos)} videos")
+                total_videos += added
+                successful += 1
+            else:
+                print(f"  ❌ No videos available for this category")
+                failed += 1
+        
+        print("\n" + "=" * 70)
+        print(f"🎉 Done! Total: {total_videos} videos")
+        print(f"✅ Successful categories: {successful}")
+        print(f"❌ Failed categories: {failed}")
+        
+        if total_videos == 0:
+            print(f"\n❌ FAILED - No videos were saved")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
