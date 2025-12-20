@@ -7,12 +7,14 @@ import { Tooltip } from '../common/Tooltip';
 interface ActionCardProps {
   action: PlanAction;
   onComplete: (actionId: string) => Promise<void>;
+  onUncomplete?: (actionId: string) => Promise<void>;
   onOpenTikTok?: (url: string) => void;
 }
 
 export const ActionCard: React.FC<ActionCardProps> = ({
   action,
   onComplete,
+  onUncomplete,
   onOpenTikTok,
 }) => {
   const { id, type, category, target, completed } = action;
@@ -22,15 +24,15 @@ export const ActionCard: React.FC<ActionCardProps> = ({
   const handleComplete = async () => {
     if (isCompleting) return;
 
-    // TODO: Add uncomplete functionality when backend supports it
-    if (completed) {
-      console.log('Uncomplete not yet implemented');
-      return;
-    }
-
     setIsCompleting(true);
     try {
-      await onComplete(id);
+      if (completed && onUncomplete) {
+        // Uncomplete action
+        await onUncomplete(id);
+      } else {
+        // Complete action
+        await onComplete(id);
+      }
     } finally {
       setIsCompleting(false);
     }
@@ -84,7 +86,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
             className={clsx(
               'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
               completed
-                ? 'bg-green-500 border-green-500 cursor-not-allowed'
+                ? 'bg-green-500 border-green-500 hover:bg-green-600'
                 : 'border-white/30 hover:border-teal-500',
               isCompleting && 'opacity-50 cursor-wait'
             )}

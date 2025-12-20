@@ -10,6 +10,7 @@ interface PlanState {
   // Actions
   fetchPlan: (categoryCode?: string, language?: string) => Promise<void>;
   completeAction: (actionId: string) => Promise<{ success: boolean; xpEarned: number; planCompleted: boolean } | null>;
+  uncompleteAction: (actionId: string) => Promise<{ success: boolean } | null>;
   resetPlan: () => void;
 }
 
@@ -88,6 +89,53 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       set({
         plan: originalPlan,
         error: 'Failed to complete action. Please try again.',
+      });
+      return null;
+    }
+  },
+
+  uncompleteAction: async (actionId: string) => {
+    const { plan } = get();
+    if (!plan) return null;
+
+    // Save original state for rollback
+    const originalPlan = plan;
+
+    // Optimistic update (immediate UI feedback)
+    const updatedActions = plan.actions.map((action) =>
+      action.id === actionId
+        ? { ...action, completed: false, completedAt: undefined }
+        : action
+    );
+
+    set({ plan: { ...plan, actions: updatedActions } });
+
+    try {
+      // Call backend API
+      const response = await plansApi.uncompleteAction(actionId);
+
+      if (response.success) {
+        // Update with server response
+        const finalActions = plan.actions.map((action) =>
+          action.id === actionId
+            ? { ...action, completed: false, completedAt: undefined }
+            : action
+        );
+
+        set({
+          plan: { ...plan, actions: finalActions },
+          error: null,
+        });
+
+        return { success: true };
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to uncomplete action:', error);
+      // Revert optimistic update on error
+      set({
+        plan: originalPlan,
+        error: 'Failed to uncomplete action. Please try again.',
       });
       return null;
     }

@@ -48,3 +48,20 @@ def complete_action(action_id):
     except Exception as e:
         logging.exception(f"Unexpected error: {e}")
         return error_response('server_error', 'Internal server error', status_code=500)
+
+
+@actions_bp.route('/actions/<action_id>/uncomplete', methods=['POST'])
+@jwt_required
+def uncomplete_action(action_id):
+    """
+    Mark action as not completed (undo completion)
+    Requires authentication
+    """
+    try:
+        result = action_service.uncomplete_action(g.current_user_id, action_id)
+        return success_response(result)
+    except APIError as e:
+        return error_response(e.code, e.message, e.details, e.status_code)
+    except Exception as e:
+        logging.exception(f"Unexpected error: {e}")
+        return error_response('server_error', 'Internal server error', status_code=500)

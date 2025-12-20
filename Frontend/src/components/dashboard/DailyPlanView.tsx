@@ -6,6 +6,7 @@ import { ActionList } from './ActionList';
 interface DailyPlanViewProps {
   plan: DailyActionPlan;
   onComplete: (actionId: string) => Promise<void>;
+  onUncomplete?: (actionId: string) => Promise<void>;
   onOpenTikTok: (url: string) => void;
   onChangeCategory?: () => void;
 }
@@ -13,6 +14,7 @@ interface DailyPlanViewProps {
 export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
   plan,
   onComplete,
+  onUncomplete,
   onOpenTikTok,
   onChangeCategory,
 }) => {
@@ -57,6 +59,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
         title="✅ Добавь это в свою ленту"
         actions={positiveActions}
         onComplete={onComplete}
+        onUncomplete={onUncomplete}
         onOpenTikTok={onOpenTikTok}
       />
 
@@ -65,6 +68,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
         title="🚫 Убери это из своей ленты"
         actions={negativeActions}
         onComplete={onComplete}
+        onUncomplete={onUncomplete}
       />
 
       {/* Footer motivation */}

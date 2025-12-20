@@ -10,7 +10,7 @@ import { useAuthStore } from '../../store/authStore';
 import { STORAGE_KEYS } from '../../lib/constants';
 
 export const DashboardPage: React.FC = () => {
-  const { plan, isLoading, error, fetchPlan, completeAction } = usePlanStore();
+  const { plan, isLoading, error, fetchPlan, completeAction, uncompleteAction } = usePlanStore();
   const { isAuthenticated } = useAuthStore();
 
   const [showErrorToast, setShowErrorToast] = useState(false);
@@ -125,6 +125,9 @@ export const DashboardPage: React.FC = () => {
           <DailyPlanView
             plan={plan}
             onComplete={handleCompleteAction}
+            onUncomplete={async (actionId) => {
+              await uncompleteAction(actionId);
+            }}
             onOpenTikTok={handleOpenTikTok}
             onChangeCategory={handleChangeCategory}
           />

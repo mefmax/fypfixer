@@ -6,6 +6,7 @@ interface ActionListProps {
   title: string;
   actions: PlanAction[];
   onComplete: (actionId: string) => Promise<void>;
+  onUncomplete?: (actionId: string) => Promise<void>;
   onOpenTikTok?: (url: string) => void;
 }
 
@@ -13,6 +14,7 @@ export const ActionList: React.FC<ActionListProps> = ({
   title,
   actions,
   onComplete,
+  onUncomplete,
   onOpenTikTok,
 }) => {
   if (actions.length === 0) return null;
@@ -32,6 +34,7 @@ export const ActionList: React.FC<ActionListProps> = ({
             key={action.id}
             action={action}
             onComplete={onComplete}
+            onUncomplete={onUncomplete}
             onOpenTikTok={onOpenTikTok}
           />
         ))}

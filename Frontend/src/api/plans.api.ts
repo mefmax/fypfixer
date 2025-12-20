@@ -42,6 +42,11 @@ export const plansApi = {
     return response.data;
   },
 
+  uncompleteAction: async (actionId: string): Promise<ApiResponse<CompleteActionResponse>> => {
+    const response = await apiClient.post<ApiResponse<CompleteActionResponse>>(`/actions/${actionId}/uncomplete`);
+    return response.data;
+  },
+
   getCategories: async (language = 'en'): Promise<ApiResponse<{ categories: Category[] }>> => {
     const response = await apiClient.get('/categories', {
       params: { language },

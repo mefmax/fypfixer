@@ -156,6 +156,50 @@ class ActionService:
             db.session.rollback()
             raise Exception(f'Failed to complete action: {str(e)}')
 
+    def uncomplete_action(self, user_id, action_id):
+        """
+        Mark action as NOT completed (undo completion).
+        Removes progress record.
+        """
+        # 1. Parse action_id (remove "action-" prefix)
+        try:
+            numeric_id = int(action_id.replace('action-', ''))
+        except ValueError:
+            raise NotFoundError('Action')
+
+        # 2. Check if action exists
+        action = db.session.get(Action, numeric_id)
+        if not action:
+            raise NotFoundError('Action')
+
+        # 3. Find and delete progress record
+        progress = UserProgress.query.filter_by(
+            user_id=user_id,
+            action_id=numeric_id
+        ).first()
+
+        if not progress:
+            # Already not completed - return success
+            return {
+                'actionId': action_id,
+                'completed': False,
+                'completedAt': None
+            }
+
+        try:
+            db.session.delete(progress)
+            db.session.commit()
+
+            return {
+                'actionId': action_id,
+                'completed': False,
+                'completedAt': None
+            }
+
+        except Exception as e:
+            db.session.rollback()
+            raise Exception(f'Failed to uncomplete action: {str(e)}')
+
 
 # Singleton instance
 action_service = ActionService()
