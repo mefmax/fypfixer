@@ -17,7 +17,26 @@ import type {
   CategoryStats,
 } from '../types/category.types';
 
+interface Category {
+  id: number;
+  code: string;
+  name: string;
+  is_premium: boolean;
+}
+
+interface CategoriesListResponse {
+  categories: Category[];
+}
+
 export const categoriesApi = {
+  /**
+   * Get all available categories (public endpoint).
+   */
+  getCategories: async (): Promise<ApiResponse<CategoriesListResponse>> => {
+    const response = await apiClient.get('/categories');
+    return response.data;
+  },
+
   /**
    * Get user's category subscriptions.
    * @param includeInactive - include inactive/expired categories

@@ -9,7 +9,8 @@ import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
 import { VideoModal } from './components/video/VideoModal';
-import { loadAppConfig } from './lib/appConfig';
+import { loadAppConfig, validateStoredCategory } from './lib/appConfig';
+import { categoriesApi } from './api/categories.api';
 import { logger } from './lib/logger';
 
 // Create React Query client
@@ -45,9 +46,22 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 function App() {
-  // Load app config on startup (async, non-blocking)
+  // Load app config and validate stored data on startup
   useEffect(() => {
-    loadAppConfig().catch((err) => logger.error('Failed to load app config:', err));
+    const init = async () => {
+      try {
+        await loadAppConfig();
+        // Validate stored category against available categories
+        const response = await categoriesApi.getCategories();
+        if (response.success && response.data?.categories) {
+          const validCodes = response.data.categories.map((c) => c.code);
+          await validateStoredCategory(validCodes);
+        }
+      } catch (err) {
+        logger.error('Failed to initialize app:', err);
+      }
+    };
+    init();
   }, []);
 
   return (

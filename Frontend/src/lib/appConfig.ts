@@ -7,6 +7,7 @@
 
 import apiClient from './axios';
 import { logger } from './logger';
+import { STORAGE_KEYS } from './constants';
 
 export interface AppConfig {
   defaultCategoryCode: string | null;
@@ -98,4 +99,16 @@ export function getMaxFreeCategories(): number {
 export async function refreshAppConfig(): Promise<AppConfig> {
   cachedConfig = null;
   return loadAppConfig();
+}
+
+/**
+ * Validate and clean localStorage category.
+ * Call this on app startup to remove stale category values.
+ */
+export async function validateStoredCategory(validCodes: string[]): Promise<void> {
+  const stored = localStorage.getItem(STORAGE_KEYS.CATEGORY);
+  if (stored && !validCodes.includes(stored)) {
+    logger.info(`Removing invalid category '${stored}' from localStorage`);
+    localStorage.removeItem(STORAGE_KEYS.CATEGORY);
+  }
 }
