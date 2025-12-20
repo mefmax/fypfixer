@@ -128,8 +128,7 @@ class StreakService:
     def check_streak_status(self, user_id: int) -> Dict:
         """
         Check user's current streak status.
-
-        Returns warning if streak is at risk.
+        Returns camelCase fields for frontend compatibility.
         """
         stats = self.get_or_create_stats(user_id)
 
@@ -139,16 +138,19 @@ class StreakService:
         if days_since == 0:
             status = 'completed_today'
         elif days_since == 1:
-            status = 'at_risk'  # Haven't completed today, but still can
+            status = 'at_risk'
         elif days_since > 1:
             status = 'broken'
 
+        # Return camelCase for frontend
         return {
-            'current_streak': stats.current_streak_days,
-            'max_streak': stats.max_streak_days,
-            'days_since_activity': days_since,
+            'currentStreak': stats.current_streak_days,
+            'longestStreak': stats.max_streak_days,
+            'nextMilestone': self._get_next_milestone(stats.current_streak_days),
+            'totalXp': stats.total_xp or 0,
+            'level': stats.current_level or 'Beginner',
             'status': status,
-            'next_milestone': self._get_next_milestone(stats.current_streak_days),
+            'daysSinceActivity': days_since,
         }
 
     def _get_next_milestone(self, current: int) -> Optional[int]:
