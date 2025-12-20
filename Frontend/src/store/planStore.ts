@@ -34,11 +34,11 @@ export const usePlanStore = create<PlanState>((set, get) => ({
         });
         set({ plan: response.data, isLoading: false });
       } else {
-        set({ error: 'Не удалось загрузить план', isLoading: false });
+        set({ error: 'Failed to load plan', isLoading: false });
       }
     } catch (error) {
       console.error('Failed to fetch plan:', error);
-      set({ error: 'Не удалось загрузить план', isLoading: false });
+      set({ error: 'Failed to load plan', isLoading: false });
     }
   },
 

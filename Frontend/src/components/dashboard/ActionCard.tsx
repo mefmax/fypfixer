@@ -109,12 +109,12 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           <Tooltip
             content={
               <div className="text-xs">
-                <p className="font-medium mb-1">Как сделать в TikTok:</p>
+                <p className="font-medium mb-1">How to do it in TikTok:</p>
                 <ol className="list-decimal list-inside space-y-1 text-gray-300">
-                  <li>Открой ленту</li>
-                  <li>Найди похожее видео</li>
-                  <li>Нажми ⋯</li>
-                  <li>Выбери "Not interested"</li>
+                  <li>Open your feed</li>
+                  <li>Find a similar video</li>
+                  <li>Tap ⋯</li>
+                  <li>Select "Not interested"</li>
                 </ol>
               </div>
             }
@@ -126,7 +126,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
         {/* Completed badge */}
         {completed && (
           <span className="text-xs text-green-400 font-medium flex items-center gap-1">
-            <Check className="w-3 h-3" /> Готово
+            <Check className="w-3 h-3" /> Done
           </span>
         )}
       </div>
@@ -174,19 +174,19 @@ export const ActionCard: React.FC<ActionCardProps> = ({
         {isCompleting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Отправка...
+            Loading...
           </>
         ) : completed ? (
           <>
             <Check className="w-4 h-4" />
-            Готово
+            Completed
           </>
         ) : isNegative ? (
-          'Готово ✓'
+          'Mark as done ✓'
         ) : (
           <>
             <ExternalLink className="w-4 h-4" />
-            Открыть в TikTok
+            Open in TikTok
           </>
         )}
       </button>

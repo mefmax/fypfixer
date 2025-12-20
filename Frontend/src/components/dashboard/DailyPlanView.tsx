@@ -29,17 +29,17 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
       {/* Hero */}
       <div className="text-center">
         <h1 className="text-2xl font-bold text-white mb-2">
-          Твой план для TikTok на сегодня
+          Your TikTok plan for today
         </h1>
         <p className="text-white/60">
-          {totalCount} шагов, чтобы переобучить твою ленту FYP
+          {totalCount} actions to retrain your FYP
         </p>
         {onChangeCategory && (
           <button
             onClick={onChangeCategory}
             className="mt-2 text-teal-400 text-sm hover:underline"
           >
-            {plan.categoryName} — изменить
+            {plan.categoryName} — change
           </button>
         )}
       </div>
@@ -56,7 +56,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
 
       {/* Positive actions */}
       <ActionList
-        title="✅ Добавь это в свою ленту"
+        title="✅ Add to your feed"
         actions={positiveActions}
         onComplete={onComplete}
         onUncomplete={onUncomplete}
@@ -65,7 +65,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
 
       {/* Negative actions */}
       <ActionList
-        title="🚫 Убери это из своей ленты"
+        title="🚫 Remove from your feed"
         actions={negativeActions}
         onComplete={onComplete}
         onUncomplete={onUncomplete}
@@ -74,7 +74,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({
       {/* Footer motivation */}
       <div className="text-center py-4 border-t border-white/10">
         <p className="text-white/40 text-sm">
-          Выполняй план 7 дней — и TikTok начнёт показывать то, что тебе реально важно
+          Follow the plan for 7 days — and TikTok will start showing what truly matters to you
         </p>
       </div>
     </div>
