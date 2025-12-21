@@ -1,4 +1,5 @@
 from .auth import auth_bp
+from .oauth import oauth_bp
 from .plans import plans_bp
 from .categories import categories_bp
 from .health import health_bp
@@ -16,8 +17,9 @@ from .config import config_bp
 def register_blueprints(app):
     """Register all blueprints with the Flask app."""
 
-    # Existing routes
+    # Auth routes
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(oauth_bp, url_prefix='/api/auth/oauth')
     app.register_blueprint(plans_bp, url_prefix='/api')
     app.register_blueprint(categories_bp, url_prefix='/api')
     app.register_blueprint(health_bp, url_prefix='/api')

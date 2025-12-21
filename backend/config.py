@@ -36,6 +36,25 @@ class TestingConfig(Config):
         'postgresql://fypfixer:fypfixer@localhost:5432/fypfixer_test'
     )
 
+class OAuthConfig:
+    """OAuth provider configuration - all values from environment"""
+    # TikTok
+    TIKTOK_CLIENT_KEY = os.getenv('TIKTOK_CLIENT_KEY')
+    TIKTOK_CLIENT_SECRET = os.getenv('TIKTOK_CLIENT_SECRET')
+    TIKTOK_REDIRECT_URI = os.getenv('TIKTOK_REDIRECT_URI')
+    TIKTOK_AUTH_URL = os.getenv('TIKTOK_AUTH_URL')
+    TIKTOK_TOKEN_URL = os.getenv('TIKTOK_TOKEN_URL')
+    TIKTOK_USERINFO_URL = os.getenv('TIKTOK_USERINFO_URL')
+    TIKTOK_SCOPES = os.getenv('TIKTOK_SCOPES', 'user.info.basic')
+
+    # Future providers (prepared)
+    # GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+    # GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+    # APPLE_CLIENT_ID = os.getenv('APPLE_CLIENT_ID')
+    # APPLE_CLIENT_SECRET = os.getenv('APPLE_CLIENT_SECRET')
+    # FACEBOOK_CLIENT_ID = os.getenv('FACEBOOK_CLIENT_ID')
+    # FACEBOOK_CLIENT_SECRET = os.getenv('FACEBOOK_CLIENT_SECRET')
+
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,

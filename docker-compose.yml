@@ -2,6 +2,8 @@ services:
   backend:
     build: ./backend
     container_name: fypfixer-backend
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     environment:
@@ -14,6 +16,14 @@ services:
       - AI_PROVIDER=${AI_PROVIDER:-local}
       - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      # TikTok OAuth
+      - TIKTOK_CLIENT_KEY=${TIKTOK_CLIENT_KEY}
+      - TIKTOK_CLIENT_SECRET=${TIKTOK_CLIENT_SECRET}
+      - TIKTOK_REDIRECT_URI=${TIKTOK_REDIRECT_URI}
+      - TIKTOK_AUTH_URL=${TIKTOK_AUTH_URL}
+      - TIKTOK_TOKEN_URL=${TIKTOK_TOKEN_URL}
+      - TIKTOK_USERINFO_URL=${TIKTOK_USERINFO_URL}
+      - TIKTOK_SCOPES=${TIKTOK_SCOPES}
     volumes:
       - ./backend:/app
     depends_on:
