@@ -1,103 +1,82 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useAuthStore } from '../../store/authStore';
-import { Button } from '../../components/common/Button';
-import { Input } from '../../components/common/Input';
-
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+import { Link } from 'react-router-dom';
+import { authApi } from '../../api/auth.api';
+import { logger } from '../../lib/logger';
 
 export const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { login, isLoading } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
+  const handleTikTokLogin = async () => {
     setError('');
+    setIsLoading(true);
     try {
-      await login({ email: data.email, password: data.password });
-
-      // Check if onboarding needed
-      const { hasCompletedOnboarding } = useAuthStore.getState();
-      if (!hasCompletedOnboarding) {
-        navigate('/onboarding');
+      const response = await authApi.getTikTokAuthUrl();
+      if (response.success && response.data?.url) {
+        // Redirect to TikTok OAuth
+        window.location.href = response.data.url;
       } else {
-        navigate('/dashboard');
+        setError('Failed to get TikTok authorization URL');
       }
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+      logger.error('Failed to get TikTok auth URL:', err);
+      setError(err.response?.data?.error?.message || 'Failed to connect to TikTok. Please try again.');
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-[#0a0e27] to-[#1a1f3a]">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             FYPGlow
           </h1>
-          <p className="text-gray-400 mt-2">Welcome back! Log in to continue.</p>
+          <p className="text-gray-400 mt-2">Transform your TikTok scrolling into real progress</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* OAuth Buttons */}
+        <div className="space-y-4">
           {error && (
             <div className="p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <Input
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            error={errors.email?.message}
-            {...register('email')}
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            {...register('password')}
-          />
-
-          <Button
-            type="submit"
-            fullWidth
-            isLoading={isLoading}
+          {/* TikTok Login Button */}
+          <button
+            onClick={handleTikTokLogin}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-black hover:bg-gray-900 
+                       text-white font-semibold rounded-xl border border-gray-700 
+                       transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Log In
-          </Button>
-        </form>
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                {/* TikTok Icon */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                </svg>
+                Continue with TikTok
+              </>
+            )}
+          </button>
 
-        {/* Footer */}
-        <p className="text-center mt-6 text-gray-400">
-          Don't have an account?{' '}
-          <Link
-            to="/auth/register"
-            className="text-primary hover:text-primary-light transition-colors"
-          >
-            Sign up
-          </Link>
-        </p>
+          {/* Info text */}
+          <p className="text-center text-gray-500 text-sm mt-6">
+            By continuing, you agree to our{' '}
+            <Link to="/terms" className="text-primary hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

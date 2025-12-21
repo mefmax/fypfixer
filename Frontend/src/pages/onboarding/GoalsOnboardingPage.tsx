@@ -188,8 +188,8 @@ export const GoalsOnboardingPage: React.FC = () => {
 
           {/* Welcome Text */}
           <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">Welcome to FYPGlow</h1>
-          {user?.username ? (
-            <p className="mb-4 text-lg text-slate-300">Nice to meet you, {user.username} 👋</p>
+          {user?.display_name ? (
+            <p className="mb-4 text-lg text-slate-300">Nice to meet you, {user.display_name} 👋</p>
           ) : (
             <p className="mb-4 text-lg text-slate-300">Let's retrain your TikTok feed the right way.</p>
           )}

@@ -86,10 +86,12 @@ export const useAuthStore = create<AuthState>()(
 
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('auth-storage');
 
         set({
           user: null,
           isAuthenticated: false,
+          hasCompletedOnboarding: false,
         });
       },
 

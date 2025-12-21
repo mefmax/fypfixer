@@ -24,6 +24,9 @@ class DevelopmentConfig(Config):
         'DATABASE_URL',
         'postgresql://fypfixer:fypfixer@localhost:5432/fypfixer'
     )
+    # Session cookie settings for cross-origin OAuth
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False  # Allow HTTP in dev
 
 class ProductionConfig(Config):
     DEBUG = False

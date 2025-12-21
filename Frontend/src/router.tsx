@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
-import { RegisterPage } from './pages/auth/RegisterPage';
+import { TikTokCallback } from './pages/auth/callback/TikTokCallback';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { OnboardingRoute } from './components/auth/OnboardingRoute';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
@@ -10,15 +9,15 @@ import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <LandingPage />,
+    element: <LoginPage />,
   },
   {
     path: '/login',
     element: <LoginPage />,
   },
   {
-    path: '/register',
-    element: <RegisterPage />,
+    path: '/auth/tiktok/callback',
+    element: <TikTokCallback />,
   },
   {
     path: '/onboarding',

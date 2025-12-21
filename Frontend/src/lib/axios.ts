@@ -8,6 +8,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
+  withCredentials: true, // Required for session cookies (OAuth PKCE)
 });
 
 // Request interceptor - добавляем токен
@@ -49,14 +50,14 @@ apiClient.interceptors.response.use(
           // Refresh failed - logout
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/auth/login';
+          window.location.href = '/login';
         }
       } else {
         // No refresh token - logout
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('auth-storage');
-        window.location.href = '/auth/login';
+        window.location.href = '/login';
       }
     }
 
@@ -65,7 +66,7 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('auth-storage');
-      window.location.href = '/auth/login';
+      window.location.href = '/login';
       return Promise.reject(error);
     }
 

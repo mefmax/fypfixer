@@ -7,6 +7,8 @@ Endpoints:
 """
 
 import secrets
+import hashlib
+import base64
 import requests
 from flask import Blueprint, request, session, g
 from urllib.parse import urlencode
@@ -20,10 +22,22 @@ from config import OAuthConfig
 oauth_bp = Blueprint('oauth', __name__)
 
 
+def generate_pkce_pair():
+    """Generate PKCE code_verifier and code_challenge for OAuth 2.0."""
+    # Generate code_verifier (43-128 characters, URL-safe)
+    code_verifier = secrets.token_urlsafe(64)
+
+    # Generate code_challenge (SHA256 hash of verifier, base64url encoded)
+    code_challenge_digest = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(code_challenge_digest).rstrip(b'=').decode('utf-8')
+
+    return code_verifier, code_challenge
+
+
 @oauth_bp.route('/tiktok/url', methods=['GET'])
 def get_tiktok_auth_url():
     """
-    Generate TikTok OAuth authorization URL.
+    Generate TikTok OAuth authorization URL with PKCE.
 
     Returns:
         {
@@ -41,17 +55,28 @@ def get_tiktok_auth_url():
             status_code=500
         )
 
+    import logging
+    logger = logging.getLogger(__name__)
+
     # Generate CSRF token
     state = secrets.token_urlsafe(32)
     session['oauth_state'] = state
 
-    # Build authorization URL from config
+    # Generate PKCE pair
+    code_verifier, code_challenge = generate_pkce_pair()
+    session['oauth_code_verifier'] = code_verifier
+
+    logger.warning(f"Generated PKCE - verifier hash: {hashlib.sha256(code_verifier.encode()).hexdigest()[:16]}, challenge: {code_challenge[:20]}...")
+
+    # Build authorization URL from config with PKCE
     params = {
         'client_key': OAuthConfig.TIKTOK_CLIENT_KEY,
         'scope': OAuthConfig.TIKTOK_SCOPES,
         'response_type': 'code',
         'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
         'state': state,
+        'code_challenge': code_challenge,
+        'code_challenge_method': 'S256',
     }
 
     auth_url = f"{OAuthConfig.TIKTOK_AUTH_URL}?{urlencode(params)}"
@@ -86,15 +111,32 @@ def tiktok_callback():
     code = request.args.get('code')
     state = request.args.get('state')
 
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"OAuth callback - code present: {bool(code)}, state: {state[:20] if state else None}...")
+    logger.warning(f"Session keys: {list(session.keys())}")
+
     if not code or not state:
         return error_response('invalid_request', 'Missing code or state parameter', status_code=400)
 
     stored_state = session.pop('oauth_state', None)
+    code_verifier = session.pop('oauth_code_verifier', None)
+
+    if code_verifier:
+        logger.warning(f"Callback PKCE - verifier hash: {hashlib.sha256(code_verifier.encode()).hexdigest()[:16]}")
+    logger.warning(f"Stored state: {stored_state[:20] if stored_state else None}..., code_verifier present: {bool(code_verifier)}")
+
     if not stored_state or stored_state != state:
+        logger.error(f"State mismatch! Received: {state}, Stored: {stored_state}")
         return error_response('invalid_state', 'Invalid or expired state token', status_code=400)
 
-    # 2. Exchange code for access token
+    if not code_verifier:
+        logger.error("Code verifier missing from session")
+        return error_response('invalid_request', 'Missing code verifier - please start OAuth flow again', status_code=400)
+
+    # 2. Exchange code for access token (with PKCE code_verifier)
     try:
+        logger.warning(f"Exchanging code for token at {OAuthConfig.TIKTOK_TOKEN_URL}")
         token_response = requests.post(
             OAuthConfig.TIKTOK_TOKEN_URL,
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
@@ -104,12 +146,16 @@ def tiktok_callback():
                 'code': code,
                 'grant_type': 'authorization_code',
                 'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
+                'code_verifier': code_verifier,
             },
             timeout=10
         )
+        logger.warning(f"TikTok token response status: {token_response.status_code}")
+        logger.warning(f"TikTok token response body: {token_response.text[:500]}")
         token_response.raise_for_status()
         token_data = token_response.json()
     except requests.RequestException as e:
+        logger.error(f"Token exchange failed: {str(e)}")
         return error_response(
             'oauth_token_error',
             f'Failed to exchange code for token: {str(e)}',

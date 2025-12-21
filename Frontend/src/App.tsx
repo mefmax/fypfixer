@@ -2,9 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
-import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
-import { RegisterPage } from './pages/auth/RegisterPage';
+import { TikTokCallback } from './pages/auth/callback/TikTokCallback';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
@@ -28,7 +27,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -68,19 +67,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Landing page - redirect to dashboard if authenticated */}
+          {/* Login page - main entry point */}
           <Route
             path="/"
-            element={
-              <PublicRoute>
-                <LandingPage />
-              </PublicRoute>
-            }
-          />
-
-          {/* Auth routes */}
-          <Route
-            path="/auth/login"
             element={
               <PublicRoute>
                 <LoginPage />
@@ -88,26 +77,20 @@ function App() {
             }
           />
           <Route
-            path="/auth/register"
+            path="/login"
             element={
               <PublicRoute>
-                <RegisterPage />
+                <LoginPage />
               </PublicRoute>
             }
           />
-          {/* Legacy routes for backward compatibility */}
-          <Route path="/login" element={<Navigate to="/auth/login" replace />} />
-          <Route path="/register" element={<Navigate to="/auth/register" replace />} />
+
+          {/* TikTok OAuth callback */}
+          <Route path="/auth/tiktok/callback" element={<TikTokCallback />} />
 
           {/* Onboarding routes */}
-          <Route
-            path="/onboarding/goals"
-            element={
-              <ProtectedRoute>
-                <GoalsOnboardingPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/onboarding" element={<GoalsOnboardingPage />} />
+          <Route path="/onboarding/goals" element={<GoalsOnboardingPage />} />
           <Route
             path="/onboarding/plan-preview"
             element={
@@ -151,8 +134,8 @@ function App() {
             }
           />
 
-          {/* Catch all - redirect to home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
 
         {/* Global components */}
