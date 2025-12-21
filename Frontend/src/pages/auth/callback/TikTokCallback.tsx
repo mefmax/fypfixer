@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi } from '../../../api/auth.api';
 import { useAuthStore } from '../../../store/authStore';
@@ -10,9 +10,13 @@ export const TikTokCallback: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(true);
   const { setUser, checkOnboardingStatus } = useAuthStore();
+  const hasProcessed = useRef(false); // Prevent double-execution in React Strict Mode
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent double execution (React Strict Mode in dev calls useEffect twice)
+      if (hasProcessed.current) return;
+      hasProcessed.current = true;
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const errorParam = searchParams.get('error');

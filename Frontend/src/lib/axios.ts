@@ -8,7 +8,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-  withCredentials: true, // Required for session cookies (OAuth PKCE)
+  withCredentials: true, // Required for session cookies (OAuth state)
 });
 
 // Request interceptor - добавляем токен

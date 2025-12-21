@@ -2,16 +2,12 @@
 OAuth authentication routes - TikTok and future providers.
 
 Endpoints:
-- GET /api/auth/oauth/tiktok/url - Get TikTok authorization URL
-- GET /api/auth/oauth/tiktok/callback - Handle TikTok OAuth callback
+- POST /api/auth/oauth/tiktok/callback - Exchange code for tokens (PKCE from frontend)
 """
 
 import secrets
-import hashlib
-import base64
 import requests
-from flask import Blueprint, request, session, g
-from urllib.parse import urlencode
+from flask import Blueprint, request
 
 from app import db
 from app.models.user import User
@@ -22,76 +18,14 @@ from config import OAuthConfig
 oauth_bp = Blueprint('oauth', __name__)
 
 
-def generate_pkce_pair():
-    """Generate PKCE code_verifier and code_challenge for OAuth 2.0."""
-    # Generate code_verifier (43-128 characters, URL-safe)
-    code_verifier = secrets.token_urlsafe(64)
-
-    # Generate code_challenge (SHA256 hash of verifier, base64url encoded)
-    code_challenge_digest = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-    code_challenge = base64.urlsafe_b64encode(code_challenge_digest).rstrip(b'=').decode('utf-8')
-
-    return code_verifier, code_challenge
-
-
-@oauth_bp.route('/tiktok/url', methods=['GET'])
-def get_tiktok_auth_url():
-    """
-    Generate TikTok OAuth authorization URL with PKCE.
-
-    Returns:
-        {
-            "success": true,
-            "data": {
-                "url": "https://www.tiktok.com/v2/auth/authorize/?...."
-            }
-        }
-    """
-    # Validate configuration
-    if not OAuthConfig.TIKTOK_CLIENT_KEY or not OAuthConfig.TIKTOK_AUTH_URL:
-        return error_response(
-            'oauth_misconfigured',
-            'TikTok OAuth is not properly configured',
-            status_code=500
-        )
-
-    import logging
-    logger = logging.getLogger(__name__)
-
-    # Generate CSRF token
-    state = secrets.token_urlsafe(32)
-    session['oauth_state'] = state
-
-    # Generate PKCE pair
-    code_verifier, code_challenge = generate_pkce_pair()
-    session['oauth_code_verifier'] = code_verifier
-
-    logger.warning(f"Generated PKCE - verifier hash: {hashlib.sha256(code_verifier.encode()).hexdigest()[:16]}, challenge: {code_challenge[:20]}...")
-
-    # Build authorization URL from config with PKCE
-    params = {
-        'client_key': OAuthConfig.TIKTOK_CLIENT_KEY,
-        'scope': OAuthConfig.TIKTOK_SCOPES,
-        'response_type': 'code',
-        'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
-        'state': state,
-        'code_challenge': code_challenge,
-        'code_challenge_method': 'S256',
-    }
-
-    auth_url = f"{OAuthConfig.TIKTOK_AUTH_URL}?{urlencode(params)}"
-
-    return success_response({'url': auth_url})
-
-
-@oauth_bp.route('/tiktok/callback', methods=['GET'])
+@oauth_bp.route('/tiktok/callback', methods=['POST'])
 def tiktok_callback():
     """
     Handle TikTok OAuth callback.
 
-    Query params:
+    POST body:
         code: Authorization code from TikTok
-        state: CSRF token to verify
+        code_verifier: PKCE code verifier from frontend
 
     Returns:
         {
@@ -107,47 +41,53 @@ def tiktok_callback():
             }
         }
     """
-    # 1. Validate state (CSRF protection)
-    code = request.args.get('code')
-    state = request.args.get('state')
-
     import logging
     logger = logging.getLogger(__name__)
-    logger.warning(f"OAuth callback - code present: {bool(code)}, state: {state[:20] if state else None}...")
-    logger.warning(f"Session keys: {list(session.keys())}")
 
-    if not code or not state:
-        return error_response('invalid_request', 'Missing code or state parameter', status_code=400)
+    # Get code and code_verifier from POST body (frontend handles state validation)
+    data = request.get_json() or {}
+    code = data.get('code')
+    code_verifier = data.get('code_verifier')
 
-    stored_state = session.pop('oauth_state', None)
-    code_verifier = session.pop('oauth_code_verifier', None)
+    logger.warning(f"OAuth callback - code present: {bool(code)}, verifier length: {len(code_verifier) if code_verifier else 0}")
+    logger.warning(f"FULL code_verifier received: {code_verifier}")
 
+    # Compute what the code_challenge SHOULD be for this verifier
+    import hashlib
+    import base64
     if code_verifier:
-        logger.warning(f"Callback PKCE - verifier hash: {hashlib.sha256(code_verifier.encode()).hexdigest()[:16]}")
-    logger.warning(f"Stored state: {stored_state[:20] if stored_state else None}..., code_verifier present: {bool(code_verifier)}")
+        sha256_hash = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+        expected_challenge = base64.urlsafe_b64encode(sha256_hash).rstrip(b'=').decode('utf-8')
+        logger.warning(f"Expected code_challenge for this verifier: {expected_challenge}")
 
-    if not stored_state or stored_state != state:
-        logger.error(f"State mismatch! Received: {state}, Stored: {stored_state}")
-        return error_response('invalid_state', 'Invalid or expired state token', status_code=400)
+    if not code:
+        return error_response('invalid_request', 'Missing authorization code', status_code=400)
 
     if not code_verifier:
-        logger.error("Code verifier missing from session")
-        return error_response('invalid_request', 'Missing code verifier - please start OAuth flow again', status_code=400)
+        return error_response('invalid_request', 'Missing code verifier', status_code=400)
 
-    # 2. Exchange code for access token (with PKCE code_verifier)
+    # 2. Exchange code for access token (Desktop app uses PKCE - code_verifier instead of client_secret)
     try:
         logger.warning(f"Exchanging code for token at {OAuthConfig.TIKTOK_TOKEN_URL}")
+        logger.warning(f"Client key: {OAuthConfig.TIKTOK_CLIENT_KEY}")
+        logger.warning(f"Redirect URI: {OAuthConfig.TIKTOK_REDIRECT_URI}")
+        logger.warning(f"Code verifier to send: {code_verifier[:10]}... (length: {len(code_verifier)})")
+
+        # Send both client_secret AND code_verifier (TikTok may need both)
+        token_data_payload = {
+            'client_key': OAuthConfig.TIKTOK_CLIENT_KEY,
+            'client_secret': OAuthConfig.TIKTOK_CLIENT_SECRET,
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
+            'code_verifier': code_verifier,
+        }
+        logger.warning(f"Token request payload keys: {list(token_data_payload.keys())}")
+
         token_response = requests.post(
             OAuthConfig.TIKTOK_TOKEN_URL,
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            data={
-                'client_key': OAuthConfig.TIKTOK_CLIENT_KEY,
-                'client_secret': OAuthConfig.TIKTOK_CLIENT_SECRET,
-                'code': code,
-                'grant_type': 'authorization_code',
-                'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
-                'code_verifier': code_verifier,
-            },
+            data=token_data_payload,
             timeout=10
         )
         logger.warning(f"TikTok token response status: {token_response.status_code}")
