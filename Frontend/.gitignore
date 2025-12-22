@@ -26,7 +26,7 @@ dist-ssr
 # Documentation (internal)
 docs/
 daily/
-UI/
+/UI/
 Project days/
 
 # Frontend
