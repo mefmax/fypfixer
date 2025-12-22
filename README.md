@@ -29,3 +29,7 @@ curl http://localhost:8000/api/plan
 UI показывает демо‑план на лендинге
 
 В планах — карточки нескольких видео и трекинг выполнения шагов пользователем
+
+## Documentation
+
+- [TikTok OAuth PKCE — Lessons Learned](docs/TIKTOK_OAUTH_PKCE_LESSONS_LEARNED.md) — Критически важно для OAuth!

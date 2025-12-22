@@ -1,11 +1,12 @@
 /**
  * PKCE (Proof Key for Code Exchange) utilities for TikTok OAuth 2.0
  *
- * NOTE: TikTok uses HEX encoding for code_challenge instead of standard
+ * IMPORTANT: TikTok uses HEX encoding for code_challenge instead of standard
  * Base64URL encoding specified in RFC 7636. This implementation is
  * TikTok-specific and may not work with other OAuth providers.
  *
  * @see https://developers.tiktok.com/doc/login-kit-desktop/
+ * @see docs/TIKTOK_OAUTH_PKCE_LESSONS_LEARNED.md
  */
 
 // Generate cryptographically secure random bytes

@@ -40,8 +40,8 @@ Thumbs.db
 # Секреты 
 .env
 .env.local
-# Documentation (internal)
-docs/
+# Internal planning docs (not public docs/)
+# docs/
 daily/
 UI/
 Project days/
