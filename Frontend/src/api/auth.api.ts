@@ -1,9 +1,5 @@
 import apiClient from '../lib/axios';
-import {
-  generatePKCEPair,
-  storePKCEData,
-  retrievePKCEData,
-} from '../lib/pkce';
+import { generateState, generateCodeVerifier, generateCodeChallenge } from '../lib/pkce';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -12,31 +8,24 @@ import type {
   OAuthCallbackResponse,
 } from '../types/auth.types';
 
-// TikTok OAuth config (from env or hardcoded for dev)
-const TIKTOK_CLIENT_KEY = 'sbawtxexitqtinqhng';
-const TIKTOK_AUTH_URL = 'https://www.tiktok.com/v2/auth/authorize/';
-const TIKTOK_REDIRECT_URI = 'http://localhost:5173/auth/tiktok/callback';
-const TIKTOK_SCOPES = 'user.info.basic,user.info.profile,user.info.stats,video.list';
+// TikTok OAuth config from environment
+const TIKTOK_CLIENT_KEY = import.meta.env.VITE_TIKTOK_CLIENT_KEY;
+const TIKTOK_AUTH_URL = import.meta.env.VITE_TIKTOK_AUTH_URL || 'https://www.tiktok.com/v2/auth/authorize/';
+const TIKTOK_REDIRECT_URI = import.meta.env.VITE_TIKTOK_REDIRECT_URI;
+const TIKTOK_SCOPES = import.meta.env.VITE_TIKTOK_SCOPES || 'user.info.basic';
 
 export const authApi = {
-  // OAuth Methods - Frontend-side PKCE generation
+  // OAuth Methods - PKCE flow with HEX-encoded challenge (TikTok requirement)
   getTikTokAuthUrl: async (): Promise<TikTokAuthUrlResponse> => {
-    // Generate PKCE on frontend (solves SameSite cookie issue)
-    const { state, codeVerifier, codeChallenge } = await generatePKCEPair();
+    const state = generateState();
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-    // Debug logging - FULL values for debugging PKCE issue
-    console.log('[OAuth] Generated PKCE:', {
-      state: state.substring(0, 10) + '...',
-      verifier: codeVerifier,  // FULL verifier for debugging
-      challenge: codeChallenge, // FULL challenge for debugging
-      verifierLength: codeVerifier.length,
-      challengeLength: codeChallenge.length,
-    });
+    // Store in localStorage for callback verification
+    localStorage.setItem('oauth_state', state);
+    localStorage.setItem('oauth_code_verifier', codeVerifier);
 
-    // Store in sessionStorage for callback
-    storePKCEData(state, codeVerifier);
-
-    // Build authorization URL
+    // Build authorization URL with PKCE (TikTok requires HEX-encoded challenge)
     const params = new URLSearchParams({
       client_key: TIKTOK_CLIENT_KEY,
       scope: TIKTOK_SCOPES,
@@ -49,13 +38,6 @@ export const authApi = {
 
     const url = `${TIKTOK_AUTH_URL}?${params.toString()}`;
 
-    // Log FULL URL for debugging - check code_challenge in URL
-    console.log('[OAuth] FULL TikTok auth URL:', url);
-    console.log('[OAuth] code_challenge in URL:', params.get('code_challenge'));
-
-    // Save URL to localStorage for later comparison
-    localStorage.setItem('oauth_auth_url', url);
-
     return {
       success: true,
       data: { url },
@@ -63,43 +45,17 @@ export const authApi = {
   },
 
   handleTikTokCallback: async (code: string, state: string): Promise<OAuthCallbackResponse> => {
-    // Retrieve PKCE data from sessionStorage
-    const { state: storedState, codeVerifier } = retrievePKCEData();
+    const storedState = localStorage.getItem('oauth_state');
+    const codeVerifier = localStorage.getItem('oauth_code_verifier');
 
-    // Debug logging - FULL values to compare with what was sent to TikTok
-    const pkceDebug = localStorage.getItem('pkce_debug');
-    const savedAuthUrl = localStorage.getItem('oauth_auth_url');
+    localStorage.removeItem('oauth_state');
+    localStorage.removeItem('oauth_code_verifier');
 
-    // Extract code_challenge from saved URL
-    let challengeFromUrl = null;
-    if (savedAuthUrl) {
-      const urlParams = new URL(savedAuthUrl).searchParams;
-      challengeFromUrl = urlParams.get('code_challenge');
-    }
-
-    console.log('[OAuth] Callback PKCE:', {
-      receivedState: state.substring(0, 10) + '...',
-      storedState: storedState ? storedState.substring(0, 10) + '...' : 'null',
-      stateMatch: storedState === state,
-      verifierFromStorage: codeVerifier,  // FULL verifier
-      verifierLength: codeVerifier?.length || 0,
-      pkceDebugFromGeneration: pkceDebug ? JSON.parse(pkceDebug) : null,
-      challengeSentToTikTok: challengeFromUrl,
-      savedAuthUrl: savedAuthUrl,
-    });
-
-    // Verify state matches (CSRF protection)
     if (!storedState || storedState !== state) {
-      console.error('[OAuth] State mismatch!', { received: state, stored: storedState });
-      throw new Error('Invalid state - possible CSRF attack or session expired');
+      throw new Error('Invalid state');
     }
 
-    if (!codeVerifier) {
-      console.error('[OAuth] Missing code verifier!');
-      throw new Error('Missing code verifier - session expired');
-    }
-
-    // Send code + code_verifier to backend for token exchange
+    // Send code + verifier to backend
     const response = await apiClient.post<OAuthCallbackResponse>('/auth/oauth/tiktok/callback', {
       code,
       code_verifier: codeVerifier,

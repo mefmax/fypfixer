@@ -25,7 +25,6 @@ def tiktok_callback():
 
     POST body:
         code: Authorization code from TikTok
-        code_verifier: PKCE code verifier from frontend
 
     Returns:
         {
@@ -44,36 +43,17 @@ def tiktok_callback():
     import logging
     logger = logging.getLogger(__name__)
 
-    # Get code and code_verifier from POST body (frontend handles state validation)
+    # Get code and code_verifier from POST body (frontend handles state validation via localStorage)
     data = request.get_json() or {}
     code = data.get('code')
     code_verifier = data.get('code_verifier')
 
-    logger.warning(f"OAuth callback - code present: {bool(code)}, verifier length: {len(code_verifier) if code_verifier else 0}")
-    logger.warning(f"FULL code_verifier received: {code_verifier}")
-
-    # Compute what the code_challenge SHOULD be for this verifier
-    import hashlib
-    import base64
-    if code_verifier:
-        sha256_hash = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        expected_challenge = base64.urlsafe_b64encode(sha256_hash).rstrip(b'=').decode('utf-8')
-        logger.warning(f"Expected code_challenge for this verifier: {expected_challenge}")
-
     if not code:
         return error_response('invalid_request', 'Missing authorization code', status_code=400)
 
-    if not code_verifier:
-        return error_response('invalid_request', 'Missing code verifier', status_code=400)
-
-    # 2. Exchange code for access token (Desktop app uses PKCE - code_verifier instead of client_secret)
+    # Exchange code for access token
+    # TikTok Desktop Apps require BOTH client_secret AND code_verifier (PKCE with HEX encoding)
     try:
-        logger.warning(f"Exchanging code for token at {OAuthConfig.TIKTOK_TOKEN_URL}")
-        logger.warning(f"Client key: {OAuthConfig.TIKTOK_CLIENT_KEY}")
-        logger.warning(f"Redirect URI: {OAuthConfig.TIKTOK_REDIRECT_URI}")
-        logger.warning(f"Code verifier to send: {code_verifier[:10]}... (length: {len(code_verifier)})")
-
-        # Send both client_secret AND code_verifier (TikTok may need both)
         token_data_payload = {
             'client_key': OAuthConfig.TIKTOK_CLIENT_KEY,
             'client_secret': OAuthConfig.TIKTOK_CLIENT_SECRET,
@@ -82,7 +62,6 @@ def tiktok_callback():
             'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
             'code_verifier': code_verifier,
         }
-        logger.warning(f"Token request payload keys: {list(token_data_payload.keys())}")
 
         token_response = requests.post(
             OAuthConfig.TIKTOK_TOKEN_URL,
@@ -90,8 +69,6 @@ def tiktok_callback():
             data=token_data_payload,
             timeout=10
         )
-        logger.warning(f"TikTok token response status: {token_response.status_code}")
-        logger.warning(f"TikTok token response body: {token_response.text[:500]}")
         token_response.raise_for_status()
         token_data = token_response.json()
     except requests.RequestException as e:

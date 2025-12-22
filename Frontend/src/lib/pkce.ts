@@ -1,6 +1,11 @@
 /**
- * PKCE (Proof Key for Code Exchange) utilities for OAuth 2.0
- * RFC 7636 compliant implementation for browser-side OAuth
+ * PKCE (Proof Key for Code Exchange) utilities for TikTok OAuth 2.0
+ *
+ * NOTE: TikTok uses HEX encoding for code_challenge instead of standard
+ * Base64URL encoding specified in RFC 7636. This implementation is
+ * TikTok-specific and may not work with other OAuth providers.
+ *
+ * @see https://developers.tiktok.com/doc/login-kit-desktop/
  */
 
 // Generate cryptographically secure random bytes
@@ -29,12 +34,22 @@ export function generateCodeVerifier(): string {
   return base64UrlEncode(randomBytes);
 }
 
+// Convert ArrayBuffer to hex string
+function arrayBufferToHex(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 // Generate code_challenge from code_verifier using S256 method
+// TikTok requires HEX encoding (not base64url like standard RFC 7636!)
 export async function generateCodeChallenge(codeVerifier: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(codeVerifier);
   const digest = await crypto.subtle.digest('SHA-256', data);
-  return base64UrlEncode(digest);
+  // TikTok uses HEX encoding, not base64url!
+  return arrayBufferToHex(digest);
 }
 
 // Generate state token for CSRF protection
@@ -46,12 +61,22 @@ export function generateState(): string {
 // Storage keys
 const STORAGE_KEY_STATE = 'oauth_state';
 const STORAGE_KEY_VERIFIER = 'oauth_code_verifier';
+const STORAGE_KEY_TIMESTAMP = 'oauth_timestamp';
+
+// Check if PKCE data exists and is fresh (within last 60 seconds)
+export function hasFreshPKCEData(): boolean {
+  const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
+  if (!timestamp) return false;
+
+  const age = Date.now() - parseInt(timestamp, 10);
+  return age < 60000; // 60 seconds
+}
 
 // Store PKCE data in localStorage (more reliable than sessionStorage for redirects)
 export function storePKCEData(state: string, codeVerifier: string): void {
   localStorage.setItem(STORAGE_KEY_STATE, state);
   localStorage.setItem(STORAGE_KEY_VERIFIER, codeVerifier);
-  console.log('[PKCE] Stored state and verifier in localStorage');
+  localStorage.setItem(STORAGE_KEY_TIMESTAMP, Date.now().toString());
 }
 
 // Retrieve and clear PKCE data from localStorage
@@ -59,14 +84,10 @@ export function retrievePKCEData(): { state: string | null; codeVerifier: string
   const state = localStorage.getItem(STORAGE_KEY_STATE);
   const codeVerifier = localStorage.getItem(STORAGE_KEY_VERIFIER);
 
-  console.log('[PKCE] Retrieved from localStorage:', {
-    hasState: !!state,
-    hasVerifier: !!codeVerifier,
-  });
-
   // Clear after retrieval (one-time use)
   localStorage.removeItem(STORAGE_KEY_STATE);
   localStorage.removeItem(STORAGE_KEY_VERIFIER);
+  localStorage.removeItem(STORAGE_KEY_TIMESTAMP);
 
   return { state, codeVerifier };
 }
@@ -80,15 +101,6 @@ export async function generatePKCEPair(): Promise<{
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-  // Save debug info to localStorage (no alert to avoid interrupting flow)
-  localStorage.setItem('pkce_debug', JSON.stringify({
-    verifier: codeVerifier,
-    challenge: codeChallenge,
-    verifierLength: codeVerifier.length,
-    challengeLength: codeChallenge.length,
-    timestamp: new Date().toISOString(),
-  }));
 
   return { state, codeVerifier, codeChallenge };
 }
