@@ -47,19 +47,21 @@ def tiktok_callback():
     data = request.get_json() or {}
     code = data.get('code')
     code_verifier = data.get('code_verifier')
+    redirect_uri = data.get('redirect_uri') or OAuthConfig.TIKTOK_REDIRECT_URI
 
     if not code:
         return error_response('invalid_request', 'Missing authorization code', status_code=400)
 
+    logger.info(f"OAuth callback: redirect_uri={redirect_uri}")
+
     # Exchange code for access token
-    # TikTok Desktop Apps require BOTH client_secret AND code_verifier (PKCE with HEX encoding)
     try:
         token_data_payload = {
             'client_key': OAuthConfig.TIKTOK_CLIENT_KEY,
             'client_secret': OAuthConfig.TIKTOK_CLIENT_SECRET,
             'code': code,
             'grant_type': 'authorization_code',
-            'redirect_uri': OAuthConfig.TIKTOK_REDIRECT_URI,
+            'redirect_uri': redirect_uri,
             'code_verifier': code_verifier,
         }
 

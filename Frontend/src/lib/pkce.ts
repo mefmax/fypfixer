@@ -1,107 +1,83 @@
 /**
- * PKCE (Proof Key for Code Exchange) utilities for TikTok OAuth 2.0
- *
- * IMPORTANT: TikTok uses HEX encoding for code_challenge instead of standard
- * Base64URL encoding specified in RFC 7636. This implementation is
- * TikTok-specific and may not work with other OAuth providers.
- *
- * @see https://developers.tiktok.com/doc/login-kit-desktop/
- * @see docs/TIKTOK_OAUTH_PKCE_LESSONS_LEARNED.md
+ * PKCE utilities for TikTok OAuth 2.0
+ * Auto-detects platform: Desktop (HEX) vs Web (Base64URL)
  */
 
-// Generate cryptographically secure random bytes
+export type TikTokPlatform = 'web' | 'desktop';
+
+export function detectPlatform(): TikTokPlatform {
+  const isDev = import.meta.env.DEV;
+  const isLocalhost = typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1');
+
+  return (isDev || isLocalhost) ? 'desktop' : 'web';
+}
+
 function generateRandomBytes(length: number): Uint8Array {
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);
   return array;
 }
 
-// Base64 URL encode (RFC 4648)
 function base64UrlEncode(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// Generate code_verifier (64 characters - some providers need longer)
-export function generateCodeVerifier(): string {
-  const randomBytes = generateRandomBytes(48); // 48 bytes = 64 chars in base64url
-  return base64UrlEncode(randomBytes);
-}
-
-// Convert ArrayBuffer to hex string
 function arrayBufferToHex(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
-  return Array.from(bytes)
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Generate code_challenge from code_verifier using S256 method
-// TikTok requires HEX encoding (not base64url like standard RFC 7636!)
-export async function generateCodeChallenge(codeVerifier: string): Promise<string> {
+export function generateCodeVerifier(): string {
+  return base64UrlEncode(generateRandomBytes(48));
+}
+
+export function generateState(): string {
+  return base64UrlEncode(generateRandomBytes(32));
+}
+
+export async function generateCodeChallenge(
+  codeVerifier: string,
+  platform?: TikTokPlatform
+): Promise<string> {
+  const targetPlatform = platform || detectPlatform();
   const encoder = new TextEncoder();
   const data = encoder.encode(codeVerifier);
   const digest = await crypto.subtle.digest('SHA-256', data);
-  // TikTok uses HEX encoding, not base64url!
-  return arrayBufferToHex(digest);
+
+  const challenge = targetPlatform === 'desktop'
+    ? arrayBufferToHex(digest)      // HEX для Desktop
+    : base64UrlEncode(digest);      // Base64URL для Web
+
+  console.log(`[PKCE] Platform: ${targetPlatform}, Challenge length: ${challenge.length}`);
+  return challenge;
 }
 
-// Generate state token for CSRF protection
-export function generateState(): string {
-  const randomBytes = generateRandomBytes(32);
-  return base64UrlEncode(randomBytes);
-}
-
-// Storage keys
-const STORAGE_KEY_STATE = 'oauth_state';
-const STORAGE_KEY_VERIFIER = 'oauth_code_verifier';
-const STORAGE_KEY_TIMESTAMP = 'oauth_timestamp';
-
-// Check if PKCE data exists and is fresh (within last 60 seconds)
-export function hasFreshPKCEData(): boolean {
-  const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
-  if (!timestamp) return false;
-
-  const age = Date.now() - parseInt(timestamp, 10);
-  return age < 60000; // 60 seconds
-}
-
-// Store PKCE data in localStorage (more reliable than sessionStorage for redirects)
 export function storePKCEData(state: string, codeVerifier: string): void {
-  localStorage.setItem(STORAGE_KEY_STATE, state);
-  localStorage.setItem(STORAGE_KEY_VERIFIER, codeVerifier);
-  localStorage.setItem(STORAGE_KEY_TIMESTAMP, Date.now().toString());
+  localStorage.setItem('oauth_state', state);
+  localStorage.setItem('oauth_code_verifier', codeVerifier);
+  localStorage.setItem('oauth_timestamp', Date.now().toString());
 }
 
-// Retrieve and clear PKCE data from localStorage
 export function retrievePKCEData(): { state: string | null; codeVerifier: string | null } {
-  const state = localStorage.getItem(STORAGE_KEY_STATE);
-  const codeVerifier = localStorage.getItem(STORAGE_KEY_VERIFIER);
-
-  // Clear after retrieval (one-time use)
-  localStorage.removeItem(STORAGE_KEY_STATE);
-  localStorage.removeItem(STORAGE_KEY_VERIFIER);
-  localStorage.removeItem(STORAGE_KEY_TIMESTAMP);
-
+  const state = localStorage.getItem('oauth_state');
+  const codeVerifier = localStorage.getItem('oauth_code_verifier');
+  localStorage.removeItem('oauth_state');
+  localStorage.removeItem('oauth_code_verifier');
+  localStorage.removeItem('oauth_timestamp');
   return { state, codeVerifier };
 }
 
-// Generate full PKCE pair
-export async function generatePKCEPair(): Promise<{
-  state: string;
-  codeVerifier: string;
-  codeChallenge: string;
-}> {
+export async function generatePKCEPair() {
+  const platform = detectPlatform();
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-  return { state, codeVerifier, codeChallenge };
+  const codeChallenge = await generateCodeChallenge(codeVerifier, platform);
+  return { state, codeVerifier, codeChallenge, platform };
 }

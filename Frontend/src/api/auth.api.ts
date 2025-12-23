@@ -1,5 +1,15 @@
+/**
+ * TikTok OAuth API - auto-detects Dev/Prod environment
+ */
+
 import apiClient from '../lib/axios';
-import { generateState, generateCodeVerifier, generateCodeChallenge } from '../lib/pkce';
+import {
+  generateState,
+  generateCodeVerifier,
+  generateCodeChallenge,
+  detectPlatform,
+  storePKCEData
+} from '../lib/pkce';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -8,63 +18,67 @@ import type {
   OAuthCallbackResponse,
 } from '../types/auth.types';
 
-// TikTok OAuth config from environment
 const TIKTOK_CLIENT_KEY = import.meta.env.VITE_TIKTOK_CLIENT_KEY;
 const TIKTOK_AUTH_URL = import.meta.env.VITE_TIKTOK_AUTH_URL || 'https://www.tiktok.com/v2/auth/authorize/';
-const TIKTOK_REDIRECT_URI = import.meta.env.VITE_TIKTOK_REDIRECT_URI;
 const TIKTOK_SCOPES = import.meta.env.VITE_TIKTOK_SCOPES || 'user.info.basic';
 
+const REDIRECT_URI_DEV = import.meta.env.VITE_TIKTOK_REDIRECT_URI_DEV || 'http://localhost:5173/auth/tiktok/callback';
+const REDIRECT_URI_PROD = import.meta.env.VITE_TIKTOK_REDIRECT_URI_PROD || 'https://fypglow.com/auth/tiktok/callback';
+
+function getRedirectUri(): string {
+  const platform = detectPlatform();
+  return platform === 'desktop' ? REDIRECT_URI_DEV : REDIRECT_URI_PROD;
+}
+
 export const authApi = {
-  // OAuth Methods - PKCE flow with HEX-encoded challenge (TikTok requirement)
   getTikTokAuthUrl: async (): Promise<TikTokAuthUrlResponse> => {
+    const platform = detectPlatform();
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const codeChallenge = await generateCodeChallenge(codeVerifier, platform);
+    const redirectUri = getRedirectUri();
 
-    // Store in localStorage for callback verification
-    localStorage.setItem('oauth_state', state);
-    localStorage.setItem('oauth_code_verifier', codeVerifier);
+    storePKCEData(state, codeVerifier);
+    localStorage.setItem('oauth_redirect_uri', redirectUri);
 
-    // Build authorization URL with PKCE (TikTok requires HEX-encoded challenge)
     const params = new URLSearchParams({
       client_key: TIKTOK_CLIENT_KEY,
       scope: TIKTOK_SCOPES,
       response_type: 'code',
-      redirect_uri: TIKTOK_REDIRECT_URI,
+      redirect_uri: redirectUri,
       state: state,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
     });
 
-    const url = `${TIKTOK_AUTH_URL}?${params.toString()}`;
+    console.log(`[Auth] Platform: ${platform}, Redirect: ${redirectUri}`);
 
-    return {
-      success: true,
-      data: { url },
-    };
+    return { success: true, data: { url: `${TIKTOK_AUTH_URL}?${params.toString()}` } };
   },
 
   handleTikTokCallback: async (code: string, state: string): Promise<OAuthCallbackResponse> => {
     const storedState = localStorage.getItem('oauth_state');
     const codeVerifier = localStorage.getItem('oauth_code_verifier');
+    const redirectUri = localStorage.getItem('oauth_redirect_uri');
 
     localStorage.removeItem('oauth_state');
     localStorage.removeItem('oauth_code_verifier');
+    localStorage.removeItem('oauth_timestamp');
+    localStorage.removeItem('oauth_redirect_uri');
 
     if (!storedState || storedState !== state) {
       throw new Error('Invalid state');
     }
 
-    // Send code + verifier to backend
     const response = await apiClient.post<OAuthCallbackResponse>('/auth/oauth/tiktok/callback', {
       code,
       code_verifier: codeVerifier,
+      redirect_uri: redirectUri,
     });
 
     return response.data;
   },
 
-  // Legacy email/password methods (deprecated)
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/login', data);
     return response.data;
