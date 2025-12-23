@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { OnboardingRoute } from './components/auth/OnboardingRoute';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
+import { TermsPage, PrivacyPage } from './pages/legal';
 
 export const router = createBrowserRouter([
   {
@@ -37,25 +38,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/privacy',
-    element: (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] to-[#1a1f3a] flex items-center justify-center p-6">
-        <div className="text-center text-white">
-          <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
-          <p className="text-[#B0B0B0]">Coming soon...</p>
-        </div>
-      </div>
-    ),
+    element: <PrivacyPage />,
   },
   {
     path: '/terms',
-    element: (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] to-[#1a1f3a] flex items-center justify-center p-6">
-        <div className="text-center text-white">
-          <h1 className="text-3xl font-bold mb-4">Terms of Service</h1>
-          <p className="text-[#B0B0B0]">Coming soon...</p>
-        </div>
-      </div>
-    ),
+    element: <TermsPage />,
   },
   {
     path: '*',
