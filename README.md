@@ -32,4 +32,5 @@ UI показывает демо‑план на лендинге
 
 ## Documentation
 
+- [Architecture v4.2](docs/FYPGLOW_ARCHITECTURE_v4.2.md) — Current architecture (API contracts, DB schema, roadmap)
 - [TikTok OAuth PKCE — Lessons Learned](docs/TIKTOK_OAUTH_PKCE_LESSONS_LEARNED.md) — Критически важно для OAuth!
