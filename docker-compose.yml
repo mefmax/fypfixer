@@ -40,7 +40,7 @@ services:
       - frontend
 
   frontend:
-    build: ./frontend
+    build: ./Frontend
     container_name: fypfixer-frontend
     ports:
       - "5173:80"
