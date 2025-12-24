@@ -139,6 +139,73 @@ JSON only, no other text:"""
 
 
 # =============================================================================
+# PLAN GENERATION (v4.2 Guided Watching)
+# =============================================================================
+
+PLAN_GENERATOR_SYSTEM = """You are FYPGlow AI assistant. You help users improve their TikTok For You Page.
+You generate personalized daily plans in Russian language.
+Always be encouraging, friendly, and motivating.
+Keep responses concise and actionable.
+Respond only with valid JSON."""
+
+PLAN_GENERATION_PROMPT = """Generate a personalized TikTok improvement plan for a user.
+
+User's selected categories: {categories}
+User's current streak: {streak} days
+User's display name: {display_name}
+
+Create a JSON response with this exact structure:
+{{
+  "motivation": {{
+    "greeting": "Персональное приветствие для {display_name} (на русском, дружелюбное)",
+    "tip": "Полезный совет про TikTok алгоритм (на русском)",
+    "encouragement": "Мотивация на основе streak {streak} дней (на русском)"
+  }},
+  "steps": [
+    {{
+      "order": 1,
+      "type": "detox",
+      "title": "Очистка ленты",
+      "description": "Описание шага (на русском)",
+      "instruction": "Пролистай 15 видео в FYP. На каждом нерелевантном видео нажми 'Не интересно'",
+      "duration_minutes": 5,
+      "target_count": 15
+    }},
+    {{
+      "order": 2,
+      "type": "watch",
+      "title": "Смотрим качественный контент",
+      "description": "Описание для категорий: {categories} (на русском)",
+      "instruction": "Досмотри каждое видео до конца и поставь лайк",
+      "duration_minutes": 10,
+      "account_count": 3
+    }},
+    {{
+      "order": 3,
+      "type": "browse",
+      "title": "Исследуем новое",
+      "description": "Описание (на русском)",
+      "instruction": "Поищи видео по хештегам из выбранных категорий",
+      "duration_minutes": 5
+    }}
+  ]
+}}
+
+Make the greeting personal and warm. Reference the streak if > 0."""
+
+ACCOUNT_ENRICHMENT_PROMPT = """Describe this TikTok creator in 1-2 sentences in Russian.
+
+Username: @{username}
+Display name: {display_name}
+Bio: {bio}
+Follower count: {follower_count}
+Category: {category}
+
+Write a brief, engaging description in Russian that would make someone want to follow this creator.
+Focus on what makes them unique and valuable.
+Response should be 50-100 characters."""
+
+# =============================================================================
 # MOTIVATION MESSAGES
 # =============================================================================
 

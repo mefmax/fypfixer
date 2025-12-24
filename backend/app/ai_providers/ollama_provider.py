@@ -1,8 +1,8 @@
 """
-Anthropic Claude Provider for production AI inference.
+Ollama Provider for local AI inference.
 
 Usage:
-    provider = AnthropicProvider()
+    provider = OllamaProvider()
     response = provider.generate("Hello")
     json_data = provider.generate_json("Generate a plan...")
 """
@@ -16,73 +16,68 @@ from typing import Dict, Any, Optional, List
 logger = logging.getLogger(__name__)
 
 
-class AnthropicProvider:
-    """Anthropic Claude провайдер для продакшена"""
+class OllamaProvider:
+    """Локальный Ollama провайдер для разработки"""
 
     def __init__(self):
-        self.api_key = os.getenv('ANTHROPIC_API_KEY')
-        self.model = os.getenv('ANTHROPIC_MODEL', 'claude-3-haiku-20240307')
-        self.base_url = "https://api.anthropic.com/v1/messages"
-        self.timeout = 30.0
-
-        if not self.api_key:
-            logger.warning("ANTHROPIC_API_KEY not set!")
+        self.base_url = os.getenv('OLLAMA_URL', 'http://localhost:11434')
+        self.model = os.getenv('OLLAMA_MODEL', 'llama3')
+        self.timeout = 60.0
 
     @property
     def name(self) -> str:
-        return f"anthropic/{self.model}"
+        return f"ollama/{self.model}"
 
     def is_available(self) -> bool:
-        """Проверка доступности API ключа"""
-        return bool(self.api_key)
-
-    def generate(self, prompt: str, system: Optional[str] = None, max_tokens: int = 1024) -> str:
-        """Генерация текста через Claude API"""
-        if not self.api_key:
-            raise ValueError("ANTHROPIC_API_KEY not configured")
-
-        headers = {
-            "x-api-key": self.api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
-        }
-
-        payload = {
-            "model": self.model,
-            "max_tokens": max_tokens,
-            "messages": [{"role": "user", "content": prompt}]
-        }
-
-        if system:
-            payload["system"] = system
-
+        """Проверка доступности Ollama"""
         try:
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(f"{self.base_url}/api/tags")
+                if response.status_code == 200:
+                    models = response.json().get('models', [])
+                    model_names = [m.get('name', '').split(':')[0] for m in models]
+                    return self.model in model_names or f"{self.model}:latest" in [m.get('name') for m in models]
+                return False
+        except Exception as e:
+            logger.warning(f"Ollama not available: {e}")
+            return False
+
+    def generate(self, prompt: str, system: Optional[str] = None, temperature: float = 0.7) -> str:
+        """Генерация текста через Ollama"""
+        try:
+            payload = {
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": temperature
+                }
+            }
+
+            if system:
+                payload["system"] = system
+
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.post(
-                    self.base_url,
-                    headers=headers,
+                    f"{self.base_url}/api/generate",
                     json=payload
                 )
                 response.raise_for_status()
                 data = response.json()
+                return data.get("response", "")
 
-                content = data.get("content", [])
-                if content and len(content) > 0:
-                    return content[0].get("text", "")
-                return ""
-
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Anthropic API error: {e.response.status_code} - {e.response.text}")
+        except httpx.TimeoutException:
+            logger.error(f"Ollama timeout after {self.timeout}s")
             raise
         except Exception as e:
-            logger.error(f"Anthropic request failed: {e}")
+            logger.error(f"Ollama generate error: {e}")
             raise
 
     def generate_json(self, prompt: str, system: Optional[str] = None) -> Dict[str, Any]:
         """Генерация структурированного JSON"""
         json_prompt = f"{prompt}\n\nRespond ONLY with valid JSON, no markdown or other text."
 
-        response_text = self.generate(json_prompt, system)
+        response_text = self.generate(json_prompt, system, temperature=0.3)
 
         try:
             # Убираем возможные markdown блоки
@@ -96,7 +91,7 @@ class AnthropicProvider:
 
             return json.loads(cleaned.strip())
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON from Claude: {response_text[:200]}")
+            logger.error(f"Failed to parse JSON from Ollama: {response_text[:200]}")
             raise ValueError(f"AI returned invalid JSON: {e}")
 
     def generate_plan(self, categories: List[str], display_name: str, streak: int = 0, language: str = 'ru') -> Dict[str, Any]:
@@ -118,12 +113,12 @@ Their current streak is {streak} days. Time of day: {time_of_day}.
 Response should be 1-2 sentences, friendly, with max 1 emoji.
 Respond with just the message, nothing else."""
 
-        return self.generate(prompt)
+        return self.generate(prompt, temperature=0.5)
 
 
-def test_anthropic():
-    """Тест Anthropic провайдера"""
-    provider = AnthropicProvider()
+def test_ollama():
+    """Тест Ollama провайдера"""
+    provider = OllamaProvider()
     print(f"Provider: {provider.name}")
     print(f"Available: {provider.is_available()}")
 
@@ -132,6 +127,10 @@ def test_anthropic():
         response = provider.generate("Say hello in Russian")
         print(f"Response: {response[:100]}")
 
+        print("\nTesting generate_json...")
+        json_response = provider.generate_json("Generate a simple JSON with name and age fields")
+        print(f"JSON: {json_response}")
+
 
 if __name__ == '__main__':
-    test_anthropic()
+    test_ollama()
