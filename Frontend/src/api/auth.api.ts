@@ -51,8 +51,6 @@ export const authApi = {
       code_challenge_method: 'S256',
     });
 
-    console.log(`[Auth] Platform: ${platform}, Redirect: ${redirectUri}`);
-
     return { success: true, data: { url: `${TIKTOK_AUTH_URL}?${params.toString()}` } };
   },
 
@@ -67,7 +65,7 @@ export const authApi = {
     localStorage.removeItem('oauth_redirect_uri');
 
     if (!storedState || storedState !== state) {
-      throw new Error('Invalid state');
+      throw new Error('Invalid OAuth state');
     }
 
     const response = await apiClient.post<OAuthCallbackResponse>('/auth/oauth/tiktok/callback', {

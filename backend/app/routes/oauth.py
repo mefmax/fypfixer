@@ -52,8 +52,6 @@ def tiktok_callback():
     if not code:
         return error_response('invalid_request', 'Missing authorization code', status_code=400)
 
-    logger.info(f"OAuth callback: redirect_uri={redirect_uri}")
-
     # Exchange code for access token
     try:
         token_data_payload = {
@@ -71,6 +69,7 @@ def tiktok_callback():
             data=token_data_payload,
             timeout=10
         )
+
         token_response.raise_for_status()
         token_data = token_response.json()
     except requests.RequestException as e:
@@ -85,6 +84,7 @@ def tiktok_callback():
     open_id = token_data.get('open_id')
 
     if not access_token or not open_id:
+        logger.error(f"Invalid token response from TikTok: missing access_token or open_id")
         return error_response(
             'oauth_token_invalid',
             'Invalid token response from TikTok',
