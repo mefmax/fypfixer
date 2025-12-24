@@ -89,3 +89,9 @@ UsersmefAppDataLocalTempv0-fypf-ixer-temp/
 v0-designs/
 
 NUL
+
+# Frontend environment files (contain secrets!)
+Frontend/.env.development
+Frontend/.env.production
+Frontend/.env.local
+Frontend/.env.*.local
