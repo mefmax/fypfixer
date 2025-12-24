@@ -13,7 +13,6 @@
 
 **Решение:**
 ```yaml
-# docker-compose.yml
 frontend:
   build:
     context: ./Frontend
@@ -28,50 +27,29 @@ frontend:
 
 ### Унифицировать TikTok OAuth
 **Сейчас:**
-- DEV: HEX PKCE, localhost redirect, sandbox
-- PROD: Base64URL PKCE, fypglow.com redirect, live
+- DEV: HEX PKCE, localhost redirect
+- PROD: Base64URL PKCE, fypglow.com redirect
 
-**После (когда PROD стабилен):**
-- Везде: Base64URL PKCE, fypglow.com redirect, live
-- Один код, одни ключи
-- Убрать `detectPlatform()` логику из pkce.ts
-- Убрать `REDIRECT_URI_DEV` из конфигов
-
-**Причина:** TikTok LIVE одобрен (24.12.2025), sandbox больше не нужен.
+**После:** Один код для всех (TikTok LIVE одобрен 24.12.2025)
 
 ---
 
 ### Переименовать `Frontend` → `frontend`
-**Проблема:** Case-sensitive пути в Linux. macOS не замечает разницу, Linux — ломается.
-
-**Решение:**
-```bash
-git mv Frontend frontend
-# Обновить docker-compose.yml
-```
-
----
-
-### CI/CD проверка localhost
-**Задача:** Добавить в CI проверку что в собранном бандле нет `localhost`.
+Case-sensitive пути в Linux.
 
 ---
 
 ## 🟢 Низкий приоритет
 
-### fail2ban от WordPress сканеров
-**Проблема:** Боты сканируют `/wp-admin/`, `/wordpress/` и т.д.
-
-### API rate limiting
-**Задача:** Ограничить количество запросов на API.
+- fail2ban от WordPress сканеров
+- API rate limiting
+- Вариативность в StaticProvider
 
 ---
 
-## ✅ Выполнено
+## ✅ Выполнено (24.12.2025)
 
-| Дата | Задача |
-|------|--------|
-| 24.12.2025 | TikTok OAuth LIVE одобрен |
-| 24.12.2025 | Новые TikTok ключи на PROD |
-| 24.12.2025 | AI-ядро создано (providers) |
-| 24.12.2025 | StaticProvider fallback |
+- TikTok OAuth LIVE одобрен
+- Новые TikTok ключи на PROD
+- AI-ядро (StaticProvider, AnthropicProvider, OllamaProvider)
+- Фикс /api/plans/today
