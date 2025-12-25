@@ -12,6 +12,7 @@ from .analytics import analytics_bp
 from .waitlist import waitlist_bp
 from .user_categories import user_categories_bp
 from .config import config_bp
+from .plans_v2 import plans_v2_bp
 
 
 def register_blueprints(app):
@@ -44,3 +45,6 @@ def register_blueprints(app):
 
     # Config (Public settings)
     app.register_blueprint(config_bp, url_prefix='/api')
+
+    # V2 API (Plans v2, Toxic Creators)
+    app.register_blueprint(plans_v2_bp, url_prefix='/api/v2')
