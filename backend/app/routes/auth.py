@@ -4,7 +4,7 @@ from app.utils.responses import success_response, error_response
 from app.utils.validators import validate_email, validate_password
 from app.utils.decorators import jwt_required
 from app.utils.errors import APIError
-from app import limiter
+from app import limiter, AUTH_LIMIT
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -49,6 +49,7 @@ auth_bp = Blueprint('auth', __name__)
 #         return error_response(e.code, e.message, e.details, e.status_code)
 
 @auth_bp.route('/logout', methods=['POST'])
+@limiter.limit(AUTH_LIMIT)
 @jwt_required
 def logout():
     auth_service.logout(g.current_user_id)

@@ -7,6 +7,8 @@ from app.services.cache_service import cache_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 from app.utils.errors import APIError
+from app.config.constants import DEFAULT_CATEGORY_CODE
+from app import limiter, HEAVY_LIMIT, READ_LIMIT, WRITE_LIMIT
 
 logger = logging.getLogger(__name__)
 plans_bp = Blueprint('plans', __name__)
@@ -17,6 +19,7 @@ plans_bp = Blueprint('plans', __name__)
 # =============================================================================
 
 @plans_bp.route('/plan/guided', methods=['GET'])
+@limiter.limit(HEAVY_LIMIT)
 @jwt_required
 def get_guided_plan():
     """
@@ -179,6 +182,7 @@ def _get_default_motivation(display_name: str, streak: int) -> dict:
 # =============================================================================
 
 @plans_bp.route('/plans', methods=['GET'])
+@limiter.limit(READ_LIMIT)
 def get_plans():
     try:
         result = plan_service.get_plans(
@@ -193,10 +197,11 @@ def get_plans():
 
 
 @plans_bp.route('/plan', methods=['GET'])
+@limiter.limit(READ_LIMIT)
 def get_daily_plan():
     """Legacy endpoint for compatibility"""
     try:
-        default_category = settings_service.get_default_category_code() or 'fitness'
+        default_category = settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
         plan = plan_service.get_daily_plan(
             request.args.get('category', default_category),
             request.args.get('lang', 'en')
@@ -207,6 +212,7 @@ def get_daily_plan():
 
 
 @plans_bp.route('/plans/<int:plan_id>/steps/<int:step_id>/complete', methods=['POST'])
+@limiter.limit(WRITE_LIMIT)
 @jwt_required
 def complete_step(plan_id, step_id):
     try:

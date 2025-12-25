@@ -5,12 +5,13 @@ from app.utils.errors import NotFoundError
 from app.services.streak_service import streak_service
 from app.services.analytics_service import analytics_service
 from app.services.settings_service import settings_service
+from app.config.constants import DEFAULT_CATEGORY_CODE
 
 
 class ActionService:
     def _get_default_category(self) -> str:
         """Get default category from settings."""
-        return settings_service.get_default_category_code() or 'fitness'
+        return settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
 
     def get_daily_actions(self, category_code=None, language='en', user_id=None):
         """

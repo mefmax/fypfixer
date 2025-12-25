@@ -5,7 +5,8 @@ from app.services.settings_service import settings_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required, jwt_optional
 from app.utils.errors import APIError
-from app import limiter
+from app import limiter, READ_LIMIT, WRITE_LIMIT
+from app.config.constants import DEFAULT_CATEGORY_CODE
 
 logger = logging.getLogger(__name__)
 actions_bp = Blueprint('actions', __name__)
@@ -13,7 +14,7 @@ actions_bp = Blueprint('actions', __name__)
 
 @actions_bp.route('/actions', methods=['GET'])
 @jwt_optional
-@limiter.limit("60 per minute")  # SECURITY: Rate limit
+@limiter.limit(READ_LIMIT)
 def get_daily_actions():
     """
     Get daily action plan
@@ -24,7 +25,7 @@ def get_daily_actions():
     If authenticated, returns completed status for each action.
     """
     try:
-        default_category = settings_service.get_default_category_code() or 'fitness'
+        default_category = settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
         result = action_service.get_daily_actions(
             category_code=request.args.get('category', default_category),
             language=request.args.get('lang', 'en'),
@@ -40,7 +41,7 @@ def get_daily_actions():
 
 @actions_bp.route('/actions/<action_id>/complete', methods=['POST'])
 @jwt_required
-@limiter.limit("30 per minute")  # SECURITY: Rate limit action completion
+@limiter.limit(WRITE_LIMIT)
 def complete_action(action_id):
     """
     Mark action as completed
@@ -58,7 +59,7 @@ def complete_action(action_id):
 
 @actions_bp.route('/actions/<action_id>/uncomplete', methods=['POST'])
 @jwt_required
-@limiter.limit("30 per minute")  # SECURITY: Rate limit
+@limiter.limit(WRITE_LIMIT)
 def uncomplete_action(action_id):
     """
     Mark action as not completed (undo completion)

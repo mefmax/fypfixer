@@ -10,7 +10,7 @@ import secrets
 import requests
 from flask import Blueprint, request
 
-from app import db, limiter
+from app import db, limiter, AUTH_LIMIT
 from app.models.user import User
 from app.services import auth_service
 from app.utils.responses import success_response, error_response
@@ -22,7 +22,7 @@ oauth_bp = Blueprint('oauth', __name__)
 
 
 @oauth_bp.route('/tiktok/callback', methods=['POST'])
-@limiter.limit("10 per minute")
+@limiter.limit(AUTH_LIMIT)
 def tiktok_callback():
     """
     Handle TikTok OAuth callback.

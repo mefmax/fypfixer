@@ -7,13 +7,14 @@ from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 from app.services.analytics_service import analytics_service
 from app.services.settings_service import settings_service
+from app.config.constants import DEFAULT_CATEGORY_CODE
 
 preferences_bp = Blueprint('preferences', __name__)
 
 
 def _get_default_category() -> str:
     """Get default category from settings."""
-    return settings_service.get_default_category_code() or 'fitness'
+    return settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
 
 
 @preferences_bp.route('/preferences', methods=['GET'])

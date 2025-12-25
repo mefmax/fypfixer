@@ -139,6 +139,23 @@ CONTENT_FILTERS: Dict[str, int] = {
 }
 
 # =============================================================================
+# DEFAULTS - Category Fallbacks
+# =============================================================================
+
+DEFAULT_CATEGORY_CODE: str = 'fitness'
+
+# =============================================================================
+# RATE LIMITS - Tiered by endpoint type
+# =============================================================================
+
+RATE_LIMITS: Dict[str, str] = {
+    'auth': '10 per minute',       # login, oauth, register
+    'write': '30 per minute',      # POST, PUT, DELETE
+    'read': '120 per minute',      # GET endpoints
+    'heavy': '5 per minute',       # AI generation, reports
+}
+
+# =============================================================================
 # SECURITY - OAuth Redirect Whitelist
 # =============================================================================
 

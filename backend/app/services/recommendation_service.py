@@ -12,6 +12,7 @@ from app.models import UserBehaviorStats, UserRecommendation, MessageTemplate
 from app.ai_providers import get_ai_provider
 from app.ai_providers.base import UserContext, SelectedAction
 from app.config import get_seed_creators, ACTION_LIMITS, DIFFICULTY
+from app.config.constants import DEFAULT_CATEGORY_CODE
 from app.services.analytics_service import analytics_service
 from app.services.settings_service import settings_service
 
@@ -30,7 +31,7 @@ class RecommendationService:
 
     def _get_default_category(self) -> str:
         """Get default category from settings."""
-        return settings_service.get_default_category_code() or 'fitness'
+        return settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
 
     def generate_daily_plan(
         self,

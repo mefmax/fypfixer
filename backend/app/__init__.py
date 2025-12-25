@@ -6,9 +6,17 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import os
 
+from app.config.constants import RATE_LIMITS
+
 db = SQLAlchemy()
 migrate = Migrate()
 limiter = Limiter(key_func=get_remote_address)
+
+# Export rate limit constants for use in routes
+AUTH_LIMIT = RATE_LIMITS['auth']
+WRITE_LIMIT = RATE_LIMITS['write']
+READ_LIMIT = RATE_LIMITS['read']
+HEAVY_LIMIT = RATE_LIMITS['heavy']
 
 def get_limiter_storage():
     redis_url = os.environ.get('REDIS_URL')
@@ -22,9 +30,10 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
-    # Configure rate limiting
+    # Configure rate limiting with headers
     app.config['RATELIMIT_STORAGE_URI'] = get_limiter_storage()
-    app.config['RATELIMIT_DEFAULT'] = "200 per day;50 per hour"
+    app.config['RATELIMIT_DEFAULT'] = READ_LIMIT  # Default to READ_LIMIT for unlabeled endpoints
+    app.config['RATELIMIT_HEADERS_ENABLED'] = True  # Enable X-RateLimit-* headers
 
     db.init_app(app)
     migrate.init_app(app, db)

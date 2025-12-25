@@ -13,19 +13,22 @@ from app.services.motivation_service import motivation_service
 from app.services.settings_service import settings_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required, jwt_optional
+from app.config.constants import DEFAULT_CATEGORY_CODE
+from app import limiter, HEAVY_LIMIT, READ_LIMIT
 
 recommendations_bp = Blueprint('recommendations', __name__)
 
 
 def _get_category_from_request(data_key='category', args_key='category'):
     """Get category code from request, falling back to dynamic default."""
-    default = settings_service.get_default_category_code() or 'fitness'
+    default = settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
     if request.is_json and request.get_json():
         return request.get_json().get(data_key, default)
     return request.args.get(args_key, default)
 
 
 @recommendations_bp.route('/plans/generate', methods=['POST'])
+@limiter.limit(HEAVY_LIMIT)
 @jwt_optional
 def generate_plan():
     """
@@ -54,7 +57,7 @@ def generate_plan():
     }
     """
     data = request.get_json() or {}
-    default_category = settings_service.get_default_category_code() or 'fitness'
+    default_category = settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
 
     result = recommendation_service.generate_daily_plan(
         user_id=getattr(g, 'current_user_id', None),
@@ -74,6 +77,7 @@ def generate_plan():
 
 
 @recommendations_bp.route('/plans/today', methods=['GET'])
+@limiter.limit(READ_LIMIT)
 @jwt_optional
 def get_today_plan():
     """
@@ -83,7 +87,7 @@ def get_today_plan():
     - category: category code (default: from settings)
     - language: language code (default: en)
     """
-    default_category = settings_service.get_default_category_code() or 'fitness'
+    default_category = settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
     result = recommendation_service.generate_daily_plan(
         user_id=getattr(g, 'current_user_id', None),
         category_code=request.args.get('category', default_category),
@@ -102,6 +106,7 @@ def get_today_plan():
 
 
 @recommendations_bp.route('/plans/status', methods=['GET'])
+@limiter.limit(READ_LIMIT)
 @jwt_optional
 def get_plan_status():
     """
@@ -117,7 +122,7 @@ def get_plan_status():
         }
     }
     """
-    default_category = settings_service.get_default_category_code() or 'fitness'
+    default_category = settings_service.get_default_category_code() or DEFAULT_CATEGORY_CODE
     result = recommendation_service.generate_daily_plan(
         user_id=getattr(g, 'current_user_id', None),
         category_code=request.args.get('category', default_category),
