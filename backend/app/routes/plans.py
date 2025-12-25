@@ -82,7 +82,8 @@ def get_guided_plan():
                     categories=category_names,
                     display_name=user.display_name or 'друг',
                     streak=streak_current,
-                    language=user.language or 'ru'
+                    language=user.language or 'ru',
+                    user_id=user.id
                 )
                 logger.info(f"AI plan generated successfully")
             else:

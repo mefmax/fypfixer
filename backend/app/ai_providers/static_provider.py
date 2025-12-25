@@ -22,7 +22,7 @@ class StaticProvider:
         """Static provider does not support JSON generation"""
         return {"error": "Static provider does not support JSON generation"}
 
-    def generate_plan(self, categories: List[str], display_name: str, streak: int = 0, language: str = 'ru') -> Dict[str, Any]:
+    def generate_plan(self, categories: List[str], display_name: str, streak: int = 0, language: str = 'ru', user_id: int = None) -> Dict[str, Any]:
         """Генерация статичного плана без AI"""
         cat_text = ", ".join(categories[:2]) if categories else "интересного контента"
         name = display_name or "друг"

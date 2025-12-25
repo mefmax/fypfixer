@@ -10,12 +10,23 @@ Usage:
 import os
 import json
 import logging
+import time
 import httpx
 from typing import Dict, Any, Optional, List
 
 from app.utils.retry import retry_with_backoff
 
 logger = logging.getLogger(__name__)
+
+# Lazy import for ai_log_service to avoid circular imports
+_ai_log_service = None
+
+def _get_ai_log_service():
+    global _ai_log_service
+    if _ai_log_service is None:
+        from app.services.ai_log_service import ai_log_service
+        _ai_log_service = ai_log_service
+    return _ai_log_service
 
 # Exceptions to retry on
 RETRYABLE_EXCEPTIONS = (
@@ -122,8 +133,8 @@ class AnthropicProvider:
             logger.error(f"Failed to parse JSON from Claude: {response_text[:200]}")
             raise ValueError(f"AI returned invalid JSON: {e}")
 
-    def generate_plan(self, categories: List[str], display_name: str, streak: int = 0, language: str = 'ru') -> Dict[str, Any]:
-        """Генерация персонализированного плана с retry и fallback"""
+    def generate_plan(self, categories: List[str], display_name: str, streak: int = 0, language: str = 'ru', user_id: int = None) -> Dict[str, Any]:
+        """Генерация персонализированного плана с retry, fallback и logging"""
         from .prompts import PLAN_GENERATOR_SYSTEM, PLAN_GENERATION_PROMPT
 
         prompt = PLAN_GENERATION_PROMPT.format(
@@ -132,17 +143,54 @@ class AnthropicProvider:
             display_name=display_name or "друг"
         )
 
+        start_time = time.time()
+        error_msg = None
+        used_fallback = False
+
         # Create a retryable function with fallback to StaticProvider
         @retry_with_backoff(
             max_attempts=3,
             backoff_seconds=(2, 4, 8),
             exceptions=RETRYABLE_EXCEPTIONS + (ValueError,),  # Include JSON parse errors
-            fallback=lambda: self._static_fallback(categories, display_name, streak, language)
+            fallback=lambda: self._static_fallback_with_flag(categories, display_name, streak, language)
         )
         def _generate():
             return self.generate_json(prompt, PLAN_GENERATOR_SYSTEM)
 
-        return _generate()
+        try:
+            result = _generate()
+
+            # Check if we used fallback (result will have a flag)
+            if isinstance(result, tuple):
+                result, used_fallback = result
+
+        except Exception as e:
+            error_msg = str(e)
+            raise
+        finally:
+            # Log the request
+            latency_ms = int((time.time() - start_time) * 1000)
+
+            try:
+                log_service = _get_ai_log_service()
+                log_service.log_request(
+                    user_id=user_id,
+                    provider='static' if used_fallback else 'anthropic',
+                    model='static/fallback' if used_fallback else self.model,
+                    latency_ms=latency_ms,
+                    prompt_tokens=None,  # Anthropic API returns this, but we're not parsing yet
+                    completion_tokens=None,
+                    error=error_msg
+                )
+            except Exception as log_error:
+                logger.warning(f"Failed to log AI request: {log_error}")
+
+        return result
+
+    def _static_fallback_with_flag(self, categories: List[str], display_name: str, streak: int, language: str):
+        """Fallback to StaticProvider, returns tuple with fallback flag"""
+        result = self._static_fallback(categories, display_name, streak, language)
+        return (result, True)  # Return with flag indicating fallback was used
 
     def _static_fallback(self, categories: List[str], display_name: str, streak: int, language: str) -> Dict[str, Any]:
         """Fallback to StaticProvider when Anthropic fails"""

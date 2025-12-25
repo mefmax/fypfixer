@@ -14,8 +14,9 @@ from .message_template import MessageTemplate
 from .premium_waitlist import PremiumWaitlist
 from .user_category import UserCategory
 from .app_setting import AppSetting
+from .ai_request_log import AIRequestLog
 
 __all__ = ['User', 'Category', 'Plan', 'PlanStep', 'StepItem',
            'UserProgress', 'UserPreferences', 'RefreshToken', 'Action',
            'UserBehaviorStats', 'TiktokVideo', 'UserRecommendation', 'MessageTemplate',
-           'PremiumWaitlist', 'UserCategory', 'AppSetting']
+           'PremiumWaitlist', 'UserCategory', 'AppSetting', 'AIRequestLog']
