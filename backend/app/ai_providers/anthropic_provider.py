@@ -13,7 +13,16 @@ import logging
 import httpx
 from typing import Dict, Any, Optional, List
 
+from app.utils.retry import retry_with_backoff
+
 logger = logging.getLogger(__name__)
+
+# Exceptions to retry on
+RETRYABLE_EXCEPTIONS = (
+    httpx.TimeoutException,
+    httpx.ConnectError,
+    httpx.RemoteProtocolError,
+)
 
 
 class AnthropicProvider:
@@ -41,6 +50,10 @@ class AnthropicProvider:
         if not self.api_key:
             raise ValueError("ANTHROPIC_API_KEY not configured")
 
+        return self._call_api(prompt, system, max_tokens)
+
+    def _call_api(self, prompt: str, system: Optional[str], max_tokens: int) -> str:
+        """Internal method to call Anthropic API with retry logic."""
         headers = {
             "x-api-key": self.api_key,
             "anthropic-version": "2023-06-01",
@@ -63,6 +76,11 @@ class AnthropicProvider:
                     headers=headers,
                     json=payload
                 )
+
+                # Check for rate limit (429) - should be retried
+                if response.status_code == 429:
+                    raise httpx.TimeoutException("Rate limited by API")
+
                 response.raise_for_status()
                 data = response.json()
 
@@ -73,6 +91,11 @@ class AnthropicProvider:
 
         except httpx.HTTPStatusError as e:
             logger.error(f"Anthropic API error: {e.response.status_code} - {e.response.text}")
+            # Server errors (5xx) should be retried
+            if e.response.status_code >= 500:
+                raise httpx.ConnectError(f"Server error: {e.response.status_code}")
+            raise
+        except RETRYABLE_EXCEPTIONS:
             raise
         except Exception as e:
             logger.error(f"Anthropic request failed: {e}")
@@ -100,7 +123,7 @@ class AnthropicProvider:
             raise ValueError(f"AI returned invalid JSON: {e}")
 
     def generate_plan(self, categories: List[str], display_name: str, streak: int = 0, language: str = 'ru') -> Dict[str, Any]:
-        """Генерация персонализированного плана"""
+        """Генерация персонализированного плана с retry и fallback"""
         from .prompts import PLAN_GENERATOR_SYSTEM, PLAN_GENERATION_PROMPT
 
         prompt = PLAN_GENERATION_PROMPT.format(
@@ -109,7 +132,24 @@ class AnthropicProvider:
             display_name=display_name or "друг"
         )
 
-        return self.generate_json(prompt, PLAN_GENERATOR_SYSTEM)
+        # Create a retryable function with fallback to StaticProvider
+        @retry_with_backoff(
+            max_attempts=3,
+            backoff_seconds=(2, 4, 8),
+            exceptions=RETRYABLE_EXCEPTIONS + (ValueError,),  # Include JSON parse errors
+            fallback=lambda: self._static_fallback(categories, display_name, streak, language)
+        )
+        def _generate():
+            return self.generate_json(prompt, PLAN_GENERATOR_SYSTEM)
+
+        return _generate()
+
+    def _static_fallback(self, categories: List[str], display_name: str, streak: int, language: str) -> Dict[str, Any]:
+        """Fallback to StaticProvider when Anthropic fails"""
+        from .static_provider import StaticProvider
+        logger.warning("AnthropicProvider: Falling back to StaticProvider")
+        static = StaticProvider()
+        return static.generate_plan(categories, display_name, streak, language)
 
     def generate_motivation(self, display_name: str, streak: int, time_of_day: str = 'day') -> str:
         """Генерация мотивационного сообщения"""
