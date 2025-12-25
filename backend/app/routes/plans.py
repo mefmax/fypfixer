@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import Blueprint, request, g
 from app.services import plan_service
 from app.services.settings_service import settings_service
+from app.services.cache_service import cache_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 from app.utils.errors import APIError
@@ -54,7 +55,22 @@ def get_guided_plan():
         streak_current = getattr(user, 'streak_current', 0) or 0
         streak_best = getattr(user, 'streak_best', 0) or 0
 
-        # Generate plan via AI
+        # Create cache key from categories
+        cache_category = ','.join(sorted(category_names))
+
+        # Check cache first
+        cached_response = cache_service.get_guided_plan(user.id, cache_category)
+        if cached_response:
+            logger.info(f"Returning cached plan for user {user.id}")
+            # Update streak info in cached response (might have changed)
+            cached_response['streak'] = {
+                'current': streak_current,
+                'best': streak_best
+            }
+            cached_response['from_cache'] = True
+            return success_response(cached_response)
+
+        # Generate plan via AI (cache miss)
         try:
             from app.ai_providers import get_ai_provider
 
@@ -92,8 +108,12 @@ def get_guided_plan():
                 'current': streak_current,
                 'best': streak_best
             },
-            'generated_at': datetime.utcnow().isoformat()
+            'generated_at': datetime.utcnow().isoformat(),
+            'from_cache': False
         }
+
+        # Save to cache for 24 hours
+        cache_service.set_guided_plan(user.id, cache_category, response)
 
         return success_response(response)
 

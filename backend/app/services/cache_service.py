@@ -62,7 +62,8 @@ class CacheService:
     TTL_SETTINGS = 3600  # 1 hour
     TTL_CATEGORIES = 3600  # 1 hour
     TTL_USER_CATEGORIES = 300  # 5 minutes
-    TTL_PLAN = 60  # 1 minute
+    TTL_PLAN = 60  # 1 minute (legacy)
+    TTL_GUIDED_PLAN = 24 * 60 * 60  # 24 hours for AI-generated plans
 
     def __init__(self):
         pass
@@ -216,6 +217,64 @@ class CacheService:
         user_part = user_id or "anon"
         key = self._get_key(self.PREFIX_PLAN, user_part, category_id, date_str)
         return self.delete(key)
+
+    # === Guided Plan Cache (Task B - 24h TTL) ===
+
+    def _guided_plan_key(self, user_id: int, category: str) -> str:
+        """Generate cache key for AI-generated guided plan."""
+        from datetime import date
+        today = date.today().isoformat()
+        return f"guided_plan:{user_id}:{category}:{today}"
+
+    def get_guided_plan(self, user_id: int, category: str) -> Optional[dict]:
+        """
+        Get cached AI-generated plan.
+
+        Args:
+            user_id: User ID
+            category: Category name (comma-separated if multiple)
+
+        Returns:
+            Cached plan dict or None if not found/expired
+        """
+        key = self._guided_plan_key(user_id, category)
+        result = self.get(key)
+
+        if result:
+            logger.info(f"CacheService: Guided plan CACHE HIT for user {user_id}")
+        else:
+            logger.info(f"CacheService: Guided plan CACHE MISS for user {user_id}")
+
+        return result
+
+    def set_guided_plan(self, user_id: int, category: str, plan: dict) -> bool:
+        """
+        Cache AI-generated plan with 24-hour TTL.
+
+        Args:
+            user_id: User ID
+            category: Category name
+            plan: Plan data to cache
+
+        Returns:
+            True if cached successfully
+        """
+        key = self._guided_plan_key(user_id, category)
+        success = self.set(key, plan, self.TTL_GUIDED_PLAN)
+
+        if success:
+            logger.info(f"CacheService: Cached guided plan for user {user_id} (TTL: 24h)")
+
+        return success
+
+    def invalidate_guided_plan(self, user_id: int, category: str) -> bool:
+        """Invalidate cached guided plan."""
+        key = self._guided_plan_key(user_id, category)
+        return self.delete(key)
+
+    def invalidate_user_guided_plans(self, user_id: int) -> int:
+        """Invalidate all cached guided plans for a user."""
+        return self.delete_pattern(f"guided_plan:{user_id}:*")
 
 
 # Singleton instance

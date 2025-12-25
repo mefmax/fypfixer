@@ -1,3 +1,4 @@
+import logging
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
@@ -6,6 +7,12 @@ from config import Config
 from app.models import User, RefreshToken
 from app import db
 from app.utils.errors import AuthenticationError, ConflictError
+
+logger = logging.getLogger(__name__)
+
+# Security: Limit refresh tokens per user to prevent accumulation
+MAX_REFRESH_TOKENS_PER_USER = 5
+
 
 class AuthService:
     def hash_password(self, password):
@@ -39,7 +46,34 @@ class AuthService:
         ))
         db.session.commit()
 
+        # Cleanup old tokens - keep only MAX_REFRESH_TOKENS_PER_USER most recent
+        self._cleanup_old_tokens(user.id)
+
         return {'access_token': access_token, 'refresh_token': refresh_token}
+
+    def _cleanup_old_tokens(self, user_id):
+        """Remove old refresh tokens, keeping only the most recent ones."""
+        tokens = RefreshToken.query.filter_by(
+            user_id=user_id,
+            is_revoked=False
+        ).order_by(RefreshToken.created_at.desc()).all()
+
+        if len(tokens) > MAX_REFRESH_TOKENS_PER_USER:
+            tokens_to_delete = tokens[MAX_REFRESH_TOKENS_PER_USER:]
+            deleted_count = len(tokens_to_delete)
+
+            for token in tokens_to_delete:
+                db.session.delete(token)
+            db.session.commit()
+
+            logger.info(f"Cleaned up {deleted_count} old refresh tokens for user {user_id}")
+
+    def revoke_all_tokens(self, user_id):
+        """Revoke all refresh tokens for a user. Returns count of deleted tokens."""
+        result = RefreshToken.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        logger.info(f"Revoked all {result} refresh tokens for user {user_id}")
+        return result
 
     def register(self, email, password, language='en'):
         if User.query.filter_by(email=email.lower()).first():
