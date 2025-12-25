@@ -2,6 +2,7 @@
 Plans V2 API - New plan structure, toxic creators, curation, and favorites.
 
 Endpoints:
+- POST /api/v2/plan/generate - Generate plan v2.0 (Clear/Watch/Reinforce)
 - GET /api/v2/toxic-creators - Get list of toxic creators for user
 - GET /api/v2/curated-videos - Get curated videos for Watch step
 - GET /api/v2/favorites - Get user's favorite videos
@@ -12,16 +13,86 @@ Endpoints:
 import logging
 from flask import Blueprint, request, g
 
-from app import limiter, WRITE_LIMIT, READ_LIMIT
+from app import limiter, WRITE_LIMIT, READ_LIMIT, HEAVY_LIMIT
+from app.models import Category
 from app.services.toxic_detection_service import toxic_detection_service
 from app.services.curation_service import curation_service
 from app.services.favorites_service import favorites_service
+from app.services.plan_service_v2 import plan_service_v2
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 
 logger = logging.getLogger(__name__)
 plans_v2_bp = Blueprint('plans_v2', __name__)
 
+
+# ============ PLAN GENERATION ============
+
+@plans_v2_bp.route('/plan/generate', methods=['POST'])
+@limiter.limit(HEAVY_LIMIT)  # 5/min - heavy operation
+@jwt_required
+def generate_plan():
+    """
+    Generate a plan v2.0 with Clear/Watch/Reinforce steps.
+
+    Request body:
+    {
+        "category": "fitness"  // category slug or ID
+    }
+
+    Returns:
+    {
+        "success": true,
+        "data": {
+            "plan": {
+                "plan_id": "uuid",
+                "day_of_challenge": 3,
+                "steps": {
+                    "clear": {...},
+                    "watch": {...},
+                    "reinforce": {...}
+                }
+            }
+        }
+    }
+    """
+    try:
+        user_id = g.current_user_id
+        data = request.get_json() or {}
+
+        category_param = data.get('category')
+        if not category_param:
+            return error_response('validation_error', 'category is required', status_code=400)
+
+        # Look up category by slug or ID
+        category = None
+        if isinstance(category_param, int) or category_param.isdigit():
+            category = Category.query.get(int(category_param))
+        else:
+            category = Category.query.filter_by(slug=category_param).first()
+            if not category:
+                category = Category.query.filter_by(code=category_param).first()
+
+        if not category:
+            return error_response('not_found', f"Category '{category_param}' not found", status_code=404)
+
+        # Generate plan
+        plan = plan_service_v2.generate_plan(
+            user_id=user_id,
+            category_id=category.id,
+            category_slug=category.slug or category.code
+        )
+
+        return success_response({
+            'plan': plan
+        })
+
+    except Exception as e:
+        logger.error(f"Error generating plan: {e}")
+        return error_response('plan_error', str(e), status_code=500)
+
+
+# ============ TOXIC CREATORS ============
 
 @plans_v2_bp.route('/toxic-creators', methods=['GET'])
 @limiter.limit(WRITE_LIMIT)  # 30/min as specified
