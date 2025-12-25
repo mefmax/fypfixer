@@ -137,3 +137,20 @@ CONTENT_FILTERS: Dict[str, int] = {
     'uploaded_within_days': 14,
     'creator_min_followers': 10000,
 }
+
+# =============================================================================
+# SECURITY - OAuth Redirect Whitelist
+# =============================================================================
+
+ALLOWED_REDIRECT_URIS: List[str] = [
+    # Production
+    'https://fypglow.com/auth/callback',
+    'https://fypglow.com/auth/tiktok/callback',
+    'https://www.fypglow.com/auth/callback',
+    'https://www.fypglow.com/auth/tiktok/callback',
+    # Development
+    'http://localhost:3000/auth/callback',
+    'http://localhost:3000/auth/tiktok/callback',
+    'http://localhost:5173/auth/callback',
+    'http://localhost:5173/auth/tiktok/callback',
+]

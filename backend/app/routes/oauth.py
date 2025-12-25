@@ -5,20 +5,24 @@ Endpoints:
 - POST /api/auth/oauth/tiktok/callback - Exchange code for tokens (PKCE from frontend)
 """
 
+import logging
 import secrets
 import requests
 from flask import Blueprint, request
 
-from app import db
+from app import db, limiter
 from app.models.user import User
 from app.services import auth_service
 from app.utils.responses import success_response, error_response
+from app.config.constants import ALLOWED_REDIRECT_URIS
 from config import OAuthConfig
 
+logger = logging.getLogger(__name__)
 oauth_bp = Blueprint('oauth', __name__)
 
 
 @oauth_bp.route('/tiktok/callback', methods=['POST'])
+@limiter.limit("10 per minute")
 def tiktok_callback():
     """
     Handle TikTok OAuth callback.
@@ -40,14 +44,16 @@ def tiktok_callback():
             }
         }
     """
-    import logging
-    logger = logging.getLogger(__name__)
-
     # Get code and code_verifier from POST body (frontend handles state validation via localStorage)
     data = request.get_json() or {}
     code = data.get('code')
     code_verifier = data.get('code_verifier')
     redirect_uri = data.get('redirect_uri') or OAuthConfig.TIKTOK_REDIRECT_URI
+
+    # SEC-001: Validate redirect_uri against whitelist
+    if redirect_uri not in ALLOWED_REDIRECT_URIS:
+        logger.warning(f"OAuth redirect_uri rejected: {redirect_uri} (IP: {request.remote_addr})")
+        return error_response('invalid_redirect_uri', 'Redirect URI not allowed', status_code=400)
 
     if not code:
         return error_response('invalid_request', 'Missing authorization code', status_code=400)
