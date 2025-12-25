@@ -17,9 +17,10 @@ from .app_setting import AppSetting
 from .ai_request_log import AIRequestLog
 from .challenge import Challenge
 from .blocked_creator import BlockedCreator
+from .user_liked_video import UserLikedVideo
 
 __all__ = ['User', 'Category', 'Plan', 'PlanStep', 'StepItem',
            'UserProgress', 'UserPreferences', 'RefreshToken', 'Action',
            'UserBehaviorStats', 'TiktokVideo', 'UserRecommendation', 'MessageTemplate',
            'PremiumWaitlist', 'UserCategory', 'AppSetting', 'AIRequestLog',
-           'Challenge', 'BlockedCreator']
+           'Challenge', 'BlockedCreator', 'UserLikedVideo']
