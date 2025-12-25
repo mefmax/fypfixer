@@ -30,7 +30,15 @@ class Category(db.Model):
             return self.name
         return getattr(self, f'name_{lang}', self.name_en) or self.name_en
 
-    def to_dict(self, lang='en', include_waitlist=False, user_id=None):
+    def to_dict(self, lang='en', on_waitlist=None):
+        """
+        Convert category to dict.
+
+        Args:
+            lang: Language code for name
+            on_waitlist: Pre-computed waitlist status (avoids N+1 queries).
+                         Pass None to exclude from response, or True/False for status.
+        """
         result = {
             'id': self.id,
             'slug': self.slug or self.code,
@@ -43,15 +51,10 @@ class Category(db.Model):
             'coming_soon': self.is_premium,  # All premium are coming soon for now
         }
 
-        # Check if user is on waitlist (if requested and user_id provided)
-        if include_waitlist and user_id and self.is_premium:
-            from app.models.premium_waitlist import PremiumWaitlist
-            on_waitlist = PremiumWaitlist.query.filter_by(
-                user_id=user_id,
-                category_id=self.id
-            ).first()
-            result['on_waitlist'] = on_waitlist is not None
-        else:
-            result['on_waitlist'] = False
+        # Add waitlist status only if explicitly provided (pre-computed by caller)
+        if on_waitlist is not None:
+            result['on_waitlist'] = on_waitlist
+        elif self.is_premium:
+            result['on_waitlist'] = False  # Default for premium categories
 
         return result
