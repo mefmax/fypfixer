@@ -15,6 +15,14 @@ class Plan(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    # Plan v2.0 columns
+    day_of_challenge = db.Column(db.Integer, nullable=True)
+    challenge_id = db.Column(db.BigInteger, db.ForeignKey('challenges.id', ondelete='SET NULL'), nullable=True)
+    step_clear_completed = db.Column(db.Boolean, default=False, nullable=False)
+    step_watch_completed = db.Column(db.Boolean, default=False, nullable=False)
+    step_reinforce_completed = db.Column(db.Boolean, default=False, nullable=False)
+    signals_count = db.Column(db.Integer, default=0, nullable=False)
+
     steps = db.relationship('PlanStep', backref='plan', lazy='dynamic', cascade='all, delete-orphan')
     category = db.relationship('Category', backref='plans')
 
