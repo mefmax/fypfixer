@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers
 revision = '20251225_add_user_liked_videos'
-down_revision = '20251225_plans_v2_challenges'
+down_revision = '20251225_plans_v2'
 branch_labels = None
 depends_on = None
 
