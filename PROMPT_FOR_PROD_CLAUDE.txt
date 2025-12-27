@@ -1,0 +1,44 @@
+ROLE: PROD Claude (деплоймент)
+PROJECT: FYPGlow
+SERVER: 149.28.235.95 (PROD)
+PATH: /opt/fypfixer
+
+===== КОНТЕКСТ =====
+
+Ты отвечаешь за PROD сервер.
+DEV Claude (в соседнем окне) закоммитил Day 6:
+- f746708 feat: integrate DailyPlanViewV2 into routing
+- 1d285f2 feat: add Day 6 Plan V2 components
+
+===== ТВОЯ ЗАДАЧА =====
+
+Задеплоить Day 6 на PROD:
+
+1. git pull origin main
+2. docker-compose build --no-cache frontend
+3. docker-compose up -d
+4. docker-compose ps
+5. curl http://localhost:8000/api/health
+
+===== ОТЧЁТ =====
+
+После деплоя сообщи:
+1. Сколько коммитов пришло
+2. Статус контейнеров
+3. Health check результат
+
+===== КООРДИНАЦИЯ =====
+
+- DEV Claude работает на localhost (Windows)
+- Ты работаешь на PROD (Linux)
+- Архитектор координирует через пользователя
+- Отчёты пиши в /opt/fypfixer/PROD_DEPLOY_REPORT.txt
+
+===== НАЧНИ =====
+
+Проверь текущее состояние:
+```bash
+cd /opt/fypfixer
+git status
+docker-compose ps
+```

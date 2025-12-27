@@ -18,9 +18,11 @@ from .ai_request_log import AIRequestLog
 from .challenge import Challenge
 from .blocked_creator import BlockedCreator
 from .user_liked_video import UserLikedVideo
+from .analytics_event import AnalyticsEvent
+from .request_log import RequestLog
 
 __all__ = ['User', 'Category', 'Plan', 'PlanStep', 'StepItem',
            'UserProgress', 'UserPreferences', 'RefreshToken', 'Action',
            'UserBehaviorStats', 'TiktokVideo', 'UserRecommendation', 'MessageTemplate',
            'PremiumWaitlist', 'UserCategory', 'AppSetting', 'AIRequestLog',
-           'Challenge', 'BlockedCreator', 'UserLikedVideo']
+           'Challenge', 'BlockedCreator', 'UserLikedVideo', 'AnalyticsEvent', 'RequestLog']

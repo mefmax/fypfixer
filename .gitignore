@@ -95,3 +95,4 @@ Frontend/.env.development
 Frontend/.env.production
 Frontend/.env.local
 Frontend/.env.*.local
+.env.dev

@@ -1,0 +1,82 @@
+# DEPLOY DAY 6 TO PROD
+# Дата: 2025-12-27
+
+---
+
+## НЕТ SSH ДОСТУПА ИЗ CLAUDE CODE
+
+Выполни команды вручную:
+
+---
+
+## ШАГ 1: ПОДКЛЮЧИСЬ К СЕРВЕРУ
+
+```bash
+ssh root@149.28.235.95
+```
+
+---
+
+## ШАГ 2: ДЕПЛОЙ
+
+```bash
+cd /opt/fypfixer
+
+# Pull новый код
+git pull origin main
+
+# Пересобрать frontend (новые компоненты)
+docker-compose build --no-cache frontend
+
+# Перезапустить
+docker-compose up -d
+
+# Проверить статус
+docker-compose ps
+
+# Проверить health
+curl http://localhost:8000/api/health
+```
+
+---
+
+## ОЖИДАЕМЫЙ РЕЗУЛЬТАТ
+
+git pull:
+```
+f746708 feat: integrate DailyPlanViewV2 into routing + add env template
+1d285f2 feat: add Day 6 Plan V2 components
+```
+
+docker-compose ps:
+```
+fypfixer-backend    Up
+fypfixer-frontend   Up
+fypfixer-db         Up (healthy)
+fypfixer-redis      Up
+```
+
+curl health:
+```json
+{"status": "healthy"}
+```
+
+---
+
+## ПОСЛЕ ДЕПЛОЯ
+
+Проверь в браузере:
+1. https://fypglow.com -> должен открыться
+2. https://fypglow.com/plan -> после логина должен показать DailyPlanViewV2
+
+---
+
+## ЕСЛИ ОШИБКИ
+
+Посмотри логи:
+```bash
+docker-compose logs -f --tail=100 frontend
+docker-compose logs -f --tail=100 backend
+```
+
+---

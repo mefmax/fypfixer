@@ -1,0 +1,69 @@
+# ПРОБЛЕМА: CORS блокирует запросы с localhost
+# Дата: 2025-12-27
+
+---
+
+## ОШИБКА
+
+```
+Access to XMLHttpRequest at 'https://fypglow.com/api/auth/oauth/tiktok/callback'
+from origin 'http://localhost:5173' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+---
+
+## ПРИЧИНА
+
+PROD API (fypglow.com) не разрешает запросы с localhost:5173
+
+TikTok callback вернул код на localhost, но localhost не может
+отправить этот код на PROD backend из-за CORS.
+
+---
+
+## ВАРИАНТЫ РЕШЕНИЯ
+
+### A) Добавить localhost в CORS на сервере (быстро)
+
+На PROD сервере в backend добавить localhost в CORS_ORIGINS:
+
+```bash
+# В .env на сервере или docker-compose
+CORS_ORIGINS=https://fypglow.com,http://localhost:5173,http://localhost:3000
+```
+
+И перезапустить backend.
+
+### B) Запустить локальный backend (дольше)
+
+Поднять полный Docker стек локально:
+- PostgreSQL
+- Redis
+- Backend
+- Мигации
+
+### C) Работать только над UI без OAuth
+
+Игнорировать OAuth, делать компоненты Day 6:
+- ReinforceStep.tsx
+- ShareModal.tsx
+- DailyPlanViewV2.tsx
+- ChallengeProgress.tsx
+
+С моковыми данными, без реального API.
+
+---
+
+## РЕКОМЕНДАЦИЯ
+
+Для Day 6 (Frontend компоненты) — выбрать вариант C.
+OAuth можно тестировать на PROD после деплоя.
+
+ИЛИ быстро сделать вариант A на сервере.
+
+---
+
+## ЖДУ РЕШЕНИЯ
+
+Какой вариант выбираем: A, B или C?

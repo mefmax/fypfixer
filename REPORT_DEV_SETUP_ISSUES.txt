@@ -1,0 +1,180 @@
+# ОТЧЁТ: Проблемы при настройке Dev окружения
+# Дата: 2025-12-27
+# От: Claude Code (исполнитель)
+
+---
+
+## РЕЗЮМЕ
+
+При настройке локального dev окружения столкнулись с 4 проблемами.
+ВСЕ ПРОБЛЕМЫ УЖЕ РЕШЕНЫ. Отчёт для информации и предотвращения в будущем.
+
+---
+
+## ⚠️ ВАЖНО: ЧТО УЖЕ СДЕЛАНО (НЕ ПОВТОРЯТЬ!)
+
+### УЖЕ СОЗДАНО:
+1. ✅ Frontend/.env — с VITE_API_URL и VITE_TIKTOK_CLIENT_KEY
+2. ✅ .env.dev — dev конфигурация для docker-compose
+3. ✅ Docker контейнеры запущены (backend, db, redis)
+4. ✅ База данных инициализирована через init_db.py
+5. ✅ Frontend dev server работает на http://localhost:5173
+6. ✅ Backend API работает на http://localhost:8000
+
+### ТЕКУЩАЯ КОНФИГУРАЦИЯ:
+- Frontend использует ЛОКАЛЬНЫЙ backend (http://localhost:8000/api)
+- НЕ используем PROD API (fypglow.com) из-за CORS
+- TikTok OAuth настроен с правильными credentials
+
+### КОМАНДЫ ДЛЯ ПРОВЕРКИ:
+```bash
+docker ps                              # 3 контейнера: backend, db, redis
+curl http://localhost:8000/api/health  # {"status": "healthy"}
+# Frontend на http://localhost:5173
+```
+
+---
+
+## ПРОБЛЕМА 1: Отсутствие .env файлов
+
+### Суть:
+Проект не содержал .env файлов — только .env.example.
+Docker-compose не мог запуститься без обязательных переменных.
+
+### Что требовалось:
+- JWT_SECRET_KEY
+- SECRET_KEY
+- POSTGRES_PASSWORD
+- TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET
+
+### Решение:
+Создал .env.dev с данными из прод .env (который предоставил пользователь).
+
+### Рекомендация:
+Добавить в DEV_ONBOARDING.md инструкцию: "Получи .env от владельца проекта"
+или создать .env.dev.example с плейсхолдерами для TikTok credentials.
+
+---
+
+## ПРОБЛЕМА 2: TikTok OAuth — client_key=undefined
+
+### Суть:
+Frontend пытался авторизовать через TikTok, но VITE_TIKTOK_CLIENT_KEY не был задан.
+В URL появлялось: `client_key=undefined`
+
+### Причина:
+Frontend/.env отсутствовал или не содержал VITE_TIKTOK_CLIENT_KEY.
+
+### Решение:
+Добавил в Frontend/.env:
+```
+VITE_TIKTOK_CLIENT_KEY=awvyb17mzijy09je
+VITE_TIKTOK_REDIRECT_URI_DEV=http://localhost:5173/auth/tiktok/callback
+```
+
+### Рекомендация:
+Документировать что для TikTok OAuth нужны credentials даже на dev.
+
+---
+
+## ПРОБЛЕМА 3: CORS блокирует запросы с localhost
+
+### Суть:
+При попытке использовать PROD API (fypglow.com) с localhost:5173,
+браузер блокировал запросы из-за CORS policy.
+
+### Ошибка:
+```
+Access to XMLHttpRequest at 'https://fypglow.com/api/...'
+from origin 'http://localhost:5173' has been blocked by CORS policy
+```
+
+### Причина:
+PROD backend не включает localhost в CORS_ORIGINS:
+```
+CORS_ORIGINS=https://fypglow.com,https://www.fypglow.com,https://fypglow.app
+```
+
+### Решение:
+Вместо PROD API подняли локальный backend через Docker.
+Frontend теперь использует http://localhost:8000/api
+
+### Рекомендация архитектора:
+Решить: добавлять ли localhost в CORS на PROD для удобства dev?
+Или всегда использовать локальный backend для разработки?
+
+---
+
+## ПРОБЛЕМА 4: Миграции БД не работают на пустой базе
+
+### Суть:
+`flask db upgrade` падает с ошибкой:
+```
+relation "users" does not exist
+```
+
+### Причина:
+Миграция 20251225_add_ai_request_logs.py имеет down_revision = None,
+но создаёт таблицу с ForeignKey на users.id — которой ещё нет.
+
+Миграции предполагают что базовые таблицы (users, etc.) уже существуют,
+но на пустой БД их нет.
+
+### Решение:
+Использовал `python init_db.py` вместо `flask db upgrade`.
+init_db.py делает db.create_all() — создаёт все таблицы из моделей.
+
+### Рекомендация:
+1. Добавить базовую миграцию создающую users, categories и другие core таблицы
+2. Или документировать: "На пустой БД сначала запустить init_db.py"
+3. Исправить цепочку зависимостей миграций (down_revision)
+
+---
+
+## ТЕКУЩЕЕ СОСТОЯНИЕ
+
+### Что работает:
+✅ Docker контейнеры (backend, db, redis)
+✅ Frontend dev server (Vite на :5173)
+✅ Backend API (Flask на :8000)
+✅ База данных инициализирована
+✅ TikTok OAuth credentials настроены
+
+### Файлы созданы/изменены:
+- Frontend/.env — добавлены VITE_* переменные
+- .env.dev — dev конфигурация для docker-compose
+- .env.local — копия .env.dev
+
+---
+
+## РЕКОМЕНДАЦИИ ДЛЯ DEV_ONBOARDING.md
+
+Добавить секцию "Первый запуск":
+
+```markdown
+## Первый запуск (для новых разработчиков)
+
+1. Получи .env файл от владельца проекта
+2. Скопируй его в корень: `cp .env.received .env.dev`
+3. Создай Frontend/.env:
+   ```
+   VITE_API_URL=http://localhost:8000/api
+   VITE_TIKTOK_CLIENT_KEY=<из .env>
+   VITE_TIKTOK_REDIRECT_URI_DEV=http://localhost:5173/auth/tiktok/callback
+   ```
+4. Запусти Docker: `docker-compose --env-file .env.dev up -d`
+5. Инициализируй БД: `docker exec fypfixer-backend python init_db.py`
+6. Запусти Frontend: `cd Frontend && npm run dev`
+```
+
+---
+
+## РЕШЕНИЯ АРХИТЕКТОРА
+
+| Вопрос | Решение |
+|--------|---------|
+| localhost в CORS на PROD? | **НЕТ** — риск безопасности. Dev использует локальный backend. |
+| Миграции на пустой БД? | Сначала `init_db.py`, потом `flask db upgrade` |
+| .env.dev в репо? | **ДА** — без секретов, с плейсхолдерами |
+
+---

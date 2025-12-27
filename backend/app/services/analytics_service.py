@@ -3,8 +3,12 @@ AnalyticsService - Track user events and calculate metrics.
 
 Events tracked:
 - plan_generated: User generated a daily plan
+- plan_viewed: User viewed a plan
+- detox_completed: User completed detox step
+- watch_completed: User completed watch step
+- reinforce_completed: User completed reinforce step
+- plan_completed: User completed all steps
 - action_completed: User completed an action
-- plan_completed: User completed all actions in a plan
 - streak_milestone: User hit a streak milestone
 - onboarding_completed: User finished onboarding
 """
@@ -14,8 +18,11 @@ from typing import Dict, List, Optional, Any
 from collections import defaultdict
 
 from app import db
-from app.models import User, Plan, Action, UserProgress, UserBehaviorStats, UserRecommendation
+from app.models import User, Plan, Action, UserProgress, UserBehaviorStats, UserRecommendation, AnalyticsEvent
 from sqlalchemy import func
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AnalyticsService:
@@ -23,6 +30,10 @@ class AnalyticsService:
 
     # Event types
     EVENT_PLAN_GENERATED = 'plan_generated'
+    EVENT_PLAN_VIEWED = 'plan_viewed'
+    EVENT_DETOX_COMPLETED = 'detox_completed'
+    EVENT_WATCH_COMPLETED = 'watch_completed'
+    EVENT_REINFORCE_COMPLETED = 'reinforce_completed'
     EVENT_ACTION_COMPLETED = 'action_completed'
     EVENT_PLAN_COMPLETED = 'plan_completed'
     EVENT_STREAK_MILESTONE = 'streak_milestone'
@@ -33,28 +44,53 @@ class AnalyticsService:
         event_type: str,
         user_id: Optional[int] = None,
         properties: Optional[Dict] = None
-    ) -> None:
+    ) -> Optional[AnalyticsEvent]:
         """
-        Track an analytics event.
+        Track an analytics event and save to database.
 
-        For now, just logs. Later can send to:
-        - Database table
-        - Mixpanel/Amplitude
-        - PostHog
+        Args:
+            event_type: Type of event (e.g., 'plan_viewed', 'detox_completed')
+            user_id: Optional user ID
+            properties: Optional event data as dict
+
+        Returns:
+            Created AnalyticsEvent or None if error
         """
-        timestamp = datetime.utcnow().isoformat()
+        try:
+            event = AnalyticsEvent(
+                user_id=user_id,
+                event_type=event_type,
+                event_data=properties or {}
+            )
+            db.session.add(event)
+            db.session.commit()
 
-        event = {
-            'event': event_type,
-            'timestamp': timestamp,
-            'user_id': user_id,
-            'properties': properties or {},
-        }
+            logger.info(f"[ANALYTICS] {event_type}: user={user_id} props={properties}")
+            return event
 
-        # Log for now (replace with real analytics later)
-        print(f"[ANALYTICS] {event_type}: user={user_id} props={properties}")
+        except Exception as e:
+            logger.error(f"[ANALYTICS] Failed to track {event_type}: {e}")
+            db.session.rollback()
+            return None
 
-        # TODO: Save to analytics table or send to external service
+    def track(
+        self,
+        user_id: int,
+        event_type: str,
+        event_data: Optional[Dict] = None
+    ) -> Optional[AnalyticsEvent]:
+        """
+        Simplified track method for convenience.
+
+        Args:
+            user_id: User ID
+            event_type: Type of event
+            event_data: Optional event data
+
+        Returns:
+            Created AnalyticsEvent or None if error
+        """
+        return self.track_event(event_type, user_id, event_data)
 
     def get_dashboard_metrics(self) -> Dict[str, Any]:
         """Get high-level dashboard metrics."""

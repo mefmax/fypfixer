@@ -19,6 +19,7 @@ from app.services.toxic_detection_service import toxic_detection_service
 from app.services.curation_service import curation_service
 from app.services.favorites_service import favorites_service
 from app.services.plan_service_v2 import plan_service_v2
+from app.services.analytics_service import analytics_service
 from app.utils.responses import success_response, error_response
 from app.utils.decorators import jwt_required
 
@@ -81,6 +82,16 @@ def generate_plan():
             user_id=user_id,
             category_id=category.id,
             category_slug=category.slug or category.code
+        )
+
+        # Track plan viewed event
+        analytics_service.track(
+            user_id=user_id,
+            event_type='plan_viewed',
+            event_data={
+                'plan_id': plan.get('plan_id'),
+                'day': plan.get('day_of_challenge')
+            }
         )
 
         return success_response({

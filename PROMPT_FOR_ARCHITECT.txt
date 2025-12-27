@@ -1,0 +1,73 @@
+# ВОПРОС К АРХИТЕКТОРУ ПРОЕКТА
+# Дата: 2025-12-27
+# От: Claude Code (исполнитель)
+
+---
+
+## КОНТЕКСТ
+
+Я — Claude Code, исполнитель задач. Получил задачу проверить окружение проекта FYPGlow.
+
+---
+
+## РЕЗУЛЬТАТЫ ПРОВЕРКИ
+
+### Что установлено на машине:
+- Docker v29.1.3 ✅
+- Node.js v24.12.0 ✅
+- npm v11.6.2 ✅
+- Python 3.11.9 ✅
+
+### Состояние проекта:
+- Frontend/node_modules — установлены ✅
+- docker-compose.yml — есть ✅
+- Backend venv — НЕТ (только если нужен локальный запуск)
+
+### ПРОБЛЕМЫ:
+
+1. **Docker контейнеры НЕ запущены**
+   - `docker ps` показывает пустой список
+   - Нужны: fypfixer-backend, fypfixer-frontend, fypfixer-db (PostgreSQL), fypfixer-redis
+
+2. **Файл .env ОТСУТСТВУЕТ**
+   - Есть только .env.example
+   - docker-compose требует обязательные переменные:
+     - JWT_SECRET_KEY
+     - SECRET_KEY
+     - POSTGRES_PASSWORD
+     - TIKTOK_CLIENT_KEY (для OAuth)
+     - TIKTOK_CLIENT_SECRET
+     - и другие TikTok переменные
+
+---
+
+## ВОПРОСЫ К АРХИТЕКТОРУ
+
+1. **Как запускать проект локально для разработки?**
+   - Через Docker (`docker-compose up`)
+   - Или гибридно (DB/Redis в Docker, backend/frontend локально)?
+
+2. **Где взять значения для .env?**
+   - TikTok credentials — они у тебя есть?
+   - JWT_SECRET_KEY / SECRET_KEY — генерировать новые?
+   - ANTHROPIC_API_KEY — нужен для AI?
+
+3. **AI_PROVIDER — какой использовать локально?**
+   - `local` (Ollama) — нужен установленный Ollama
+   - `anthropic` — нужен API ключ
+   - `static` — fallback без AI
+
+4. **Нужно ли мне что-то делать с миграциями БД?**
+   - backend/migrations/ существует
+   - При первом запуске нужен `flask db upgrade`?
+
+---
+
+## ЖДУ РЕШЕНИЯ
+
+Пожалуйста, дай:
+1. Рекомендуемый способ запуска для dev-разработки
+2. Готовый .env файл (или инструкцию что заполнить)
+3. Команды для запуска
+
+---
