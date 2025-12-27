@@ -62,6 +62,10 @@ def create_app(config_name='default'):
     from app.routes import register_blueprints
     register_blueprints(app)
 
+    # Request logging middleware
+    from app.middleware import request_logger
+    request_logger.init_app(app)
+
     from app.utils.errors import APIError
     from app.utils.responses import error_response
 

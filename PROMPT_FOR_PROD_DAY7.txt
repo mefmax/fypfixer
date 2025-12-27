@@ -1,0 +1,81 @@
+============================================================
+         PROD CLAUDE - DAY 7 DEPLOY TASK
+============================================================
+Date: 2025-12-27
+Commit: 0f6bc84 feat: add analytics events tracking (Day 7 Block 1)
+
+============================================================
+                    TASK: DEPLOY MVP
+============================================================
+
+DEV Claude just pushed Day 7 Block 1 to main:
+- analytics_events table migration
+- request_logs table migration
+- AnalyticsService.track() method
+- POST /api/v2/analytics/track endpoint
+- plan_viewed tracking in plans_v2.py
+
+============================================================
+                    DEPLOY STEPS
+============================================================
+
+STEP 1: Pull latest code
+```bash
+cd /opt/fypfixer
+git pull origin main
+```
+
+STEP 2: Run migrations
+```bash
+docker-compose exec backend flask db upgrade
+```
+
+NOTE: If you get "Multiple head revisions" error, first stamp:
+```bash
+docker-compose exec backend flask db stamp 20251225_add_user_liked_videos
+docker-compose exec backend flask db upgrade
+```
+
+STEP 3: Rebuild containers
+```bash
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+STEP 4: Verify services
+```bash
+docker-compose ps
+docker-compose logs backend --tail=50
+```
+
+STEP 5: Health check
+```bash
+curl http://localhost:8000/api/health
+```
+
+STEP 6: Verify analytics table
+```bash
+docker-compose exec backend python -c "
+from app import create_app, db
+from sqlalchemy import text
+app = create_app()
+with app.app_context():
+    result = db.session.execute(text(\"SELECT COUNT(*) FROM analytics_events\"))
+    print(f'analytics_events count: {result.fetchone()[0]}')
+"
+```
+
+============================================================
+                    DELIVERABLE
+============================================================
+
+After deploy, report:
+1. Deploy successful: Yes/No
+2. All services running: Yes/No
+3. Migrations applied: Yes/No
+4. Health check passing: Yes/No
+5. Any errors encountered
+
+Then say: "Day 7 Block 1 deployed to PROD. Ready for testing."
+
+============================================================

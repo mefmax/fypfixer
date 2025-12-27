@@ -14,6 +14,7 @@ from .user_categories import user_categories_bp
 from .config import config_bp
 from .plans_v2 import plans_v2_bp
 from .analytics_v2 import analytics_v2_bp
+from .admin_metrics import admin_metrics_bp
 
 
 def register_blueprints(app):
@@ -51,3 +52,6 @@ def register_blueprints(app):
     app.register_blueprint(plans_v2_bp, url_prefix='/api/v2')
     # Analytics V2
     app.register_blueprint(analytics_v2_bp, url_prefix='/api/v2/analytics')
+
+    # Admin Metrics Dashboard
+    app.register_blueprint(admin_metrics_bp, url_prefix='/api/admin/metrics')

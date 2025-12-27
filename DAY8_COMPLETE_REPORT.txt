@@ -1,0 +1,127 @@
+============================================================
+           DAY 8 - DASHBOARD BACKEND - COMPLETE
+============================================================
+Date: 2025-12-27
+Status: COMPLETE
+
+============================================================
+                    TASK A: METRICS TABLE
+============================================================
+
+[x] Migration: 20251228_add_metrics_daily.py
+    - metrics_daily table for aggregated dashboard metrics
+    - Columns: metric_date, metric_name, metric_value, dimensions (JSONB)
+    - Unique constraint on (metric_date, metric_name, dimensions)
+    - Index on metric_date
+
+[x] Model: metrics_daily.py
+    - SQLAlchemy model with to_dict() method
+
+============================================================
+                    TASK B: ADMIN ENDPOINTS
+============================================================
+
+All endpoints require JWT + admin role.
+Blueprint: admin_metrics_bp at /api/admin/metrics
+
+[x] GET /api/admin/metrics/overview
+    Response:
+    {
+        "dau": 127,
+        "new_today": 23,
+        "total_users": 1847
+    }
+
+[x] GET /api/admin/metrics/challenge
+    Response:
+    {
+        "funnel": [
+            {"day": 0, "count": 100, "percent": 100},
+            {"day": 1, "count": 68, "percent": 68},
+            {"day": 3, "count": 45, "percent": 45},
+            {"day": 7, "count": 24, "percent": 24}
+        ],
+        "d7_completion_rate": 24.0
+    }
+
+[x] GET /api/admin/metrics/plans
+    Response:
+    {
+        "step_completion": {
+            "clear": 92.0,
+            "watch": 85.0,
+            "reinforce": 62.0
+        },
+        "avg_duration_seconds": 690,
+        "signals": {
+            "blocks": 3.2,
+            "watches_full": 3.8,
+            "likes": 3.5,
+            "follows": 2.1,
+            "shares": 0.8
+        }
+    }
+
+[x] GET /api/admin/metrics/system
+    Response:
+    {
+        "api_latency_p95_ms": 145,
+        "error_rate_percent": 0.3,
+        "ai_cost_today_usd": 8.50,
+        "status": "operational"
+    }
+
+============================================================
+                    TASK C: REQUEST LOGGING
+============================================================
+
+[x] Middleware: app/middleware/request_logger.py
+    - Logs all API requests to request_logs table
+    - Records: endpoint, method, status, latency_ms, user_id, ip_address
+    - Skips health checks and static files
+    - Handles proxy headers (X-Forwarded-For)
+
+[x] Registered in app/__init__.py
+
+[x] TESTED: Requests are being logged
+    GET /api/categories -> 200 (6ms)
+    GET /api/admin/metrics/overview -> 401 (0ms)
+
+============================================================
+                    FILES CHANGED
+============================================================
+
+NEW:
+- backend/migrations/versions/20251228_add_metrics_daily.py
+- backend/app/models/metrics_daily.py
+- backend/app/routes/admin_metrics.py
+- backend/app/middleware/request_logger.py
+- backend/app/middleware/__init__.py
+
+MODIFIED:
+- backend/app/models/__init__.py (MetricsDaily import)
+- backend/app/routes/__init__.py (admin_metrics_bp registration)
+- backend/app/__init__.py (request_logger middleware)
+
+============================================================
+                    ADMIN ACCESS
+============================================================
+
+Admin check logic in admin_metrics.py:
+1. Check user.is_admin field (if exists)
+2. Fallback: email ends with @fypglow.com
+
+TODO: Add is_admin column to users table or use app_settings
+
+============================================================
+                    NEXT STEPS
+============================================================
+
+Day 9: Dashboard Frontend
+- Build React dashboard consuming these 4 endpoints
+- Charts: funnel visualization, step completion bars
+- Real-time status indicators
+
+============================================================
+
+Day 8 complete. Dashboard API ready. Day 9 is Frontend.
