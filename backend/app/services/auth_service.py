@@ -100,3 +100,52 @@ class AuthService:
     def logout(self, user_id):
         RefreshToken.query.filter_by(user_id=user_id).update({'is_revoked': True})
         db.session.commit()
+
+    def find_or_create_oauth_user(
+        self,
+        provider: str,
+        oauth_id: str,
+        display_name: str = None,
+        avatar_url: str = None
+    ) -> User:
+        """
+        Find existing OAuth user or create new one.
+
+        Args:
+            provider: OAuth provider (e.g., 'tiktok')
+            oauth_id: Unique ID from provider (e.g., open_id)
+            display_name: User's display name from provider
+            avatar_url: User's avatar URL from provider
+
+        Returns:
+            User instance (existing or newly created)
+        """
+        user = User.query.filter_by(
+            oauth_provider=provider,
+            oauth_id=oauth_id
+        ).first()
+
+        if user:
+            # Update existing user info
+            if display_name:
+                user.display_name = display_name
+            if avatar_url:
+                user.avatar_url = avatar_url
+            db.session.commit()
+            logger.info(f"Updated existing OAuth user: {user.id}")
+        else:
+            # Create new user
+            client_id = str(uuid.uuid4())
+            user = User(
+                client_id=client_id,
+                oauth_provider=provider,
+                oauth_id=oauth_id,
+                display_name=display_name,
+                avatar_url=avatar_url,
+                language='en'
+            )
+            db.session.add(user)
+            db.session.commit()
+            logger.info(f"Created new OAuth user: {user.id}")
+
+        return user

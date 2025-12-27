@@ -5,6 +5,7 @@ from .recommendation_service import recommendation_service
 from .streak_service import streak_service
 from .motivation_service import motivation_service
 from .analytics_service import analytics_service, AnalyticsService
+from .metrics_service import metrics_service, MetricsService
 
 auth_service = AuthService()
 plan_service = PlanService()
@@ -19,4 +20,6 @@ __all__ = [
     'motivation_service',
     'analytics_service',
     'AnalyticsService',
+    'metrics_service',
+    'MetricsService',
 ]
