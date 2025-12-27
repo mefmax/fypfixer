@@ -5,7 +5,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - FLASK_ENV=${FLASK_ENV:-development}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-fypfixer}:${POSTGRES_PASSWORD:-fypfixer}@db:5432/${POSTGRES_DB:-fypfixer}
@@ -43,7 +43,7 @@ services:
     build: ./Frontend
     container_name: fypfixer-frontend
     ports:
-      - "5173:80"
+      - "127.0.0.1:5173:80"
     depends_on:
       - backend
     restart: unless-stopped
