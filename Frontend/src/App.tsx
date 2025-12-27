@@ -5,6 +5,7 @@ import { useAuthStore } from './store/authStore';
 import { LoginPage } from './pages/auth/LoginPage';
 import { TikTokCallback } from './pages/auth/callback/TikTokCallback';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
+import { AdminDashboardPage } from './pages/admin/DashboardPage';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
 import { TermsPage, PrivacyPage } from './pages/legal';
@@ -114,6 +115,16 @@ function App() {
           {/* Privacy and Terms */}
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
+
+          {/* Admin Dashboard */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch all - redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />

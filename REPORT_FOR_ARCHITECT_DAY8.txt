@@ -1,0 +1,151 @@
+============================================================
+         ARCHITECT REPORT - DAY 7 & DAY 8 COMPLETE
+============================================================
+Date: 2025-12-27
+Author: DEV Claude + PROD Claude
+
+============================================================
+                    SUMMARY
+============================================================
+
+Day 7 Block 1: Analytics Events Tracking  - COMPLETE
+Day 8: Admin Dashboard Backend            - COMPLETE
+
+Both deployed to PROD (149.28.235.95). All services healthy.
+
+============================================================
+                    DAY 7 BLOCK 1 - ANALYTICS
+============================================================
+
+Commits:
+- 0f6bc84 feat: add analytics events tracking (Day 7 Block 1)
+
+New Tables:
+1. analytics_events
+   - id, user_id, event_type, event_data (JSONB), created_at
+   - Indexes: idx_events_user, idx_events_type_date
+
+2. request_logs
+   - id, endpoint, method, status, latency_ms, user_id, ip_address, created_at
+   - Indexes: idx_logs_endpoint, idx_logs_user
+
+New Files:
+- backend/app/models/analytics_event.py
+- backend/app/models/request_log.py
+- backend/app/routes/analytics_v2.py
+- backend/migrations/versions/20251227_add_analytics_events.py
+- backend/migrations/versions/20251227_add_request_logs.py
+
+API:
+- POST /api/v2/analytics/track (JWT required)
+  - Validates event_type against whitelist
+  - Saves to analytics_events table
+
+Integration:
+- plan_viewed event tracked in plans_v2.py generate_plan()
+
+============================================================
+                    DAY 8 - DASHBOARD BACKEND
+============================================================
+
+Commits:
+- 37555a5 feat: add admin dashboard API (Day 8)
+
+New Table:
+1. metrics_daily
+   - metric_date, metric_name, metric_value, dimensions (JSONB)
+   - Unique constraint on (date, name, dimensions)
+
+New Files:
+- backend/app/models/metrics_daily.py
+- backend/app/routes/admin_metrics.py
+- backend/app/middleware/request_logger.py
+- backend/app/middleware/__init__.py
+- backend/migrations/versions/20251228_add_metrics_daily.py
+
+Admin API (all require JWT + admin role):
+
+1. GET /api/admin/metrics/overview
+   Response: { dau, new_today, total_users }
+
+2. GET /api/admin/metrics/challenge
+   Response: { funnel: [{day, count, percent}...], d7_completion_rate }
+
+3. GET /api/admin/metrics/plans
+   Response: { step_completion: {clear, watch, reinforce},
+               avg_duration_seconds,
+               signals: {blocks, watches_full, likes, follows, shares} }
+
+4. GET /api/admin/metrics/system
+   Response: { api_latency_p95_ms, error_rate_percent,
+               ai_cost_today_usd, status }
+
+Request Logging Middleware:
+- Logs ALL API requests to request_logs table
+- Records: endpoint, method, status, latency_ms, user_id, ip_address
+- Skips health checks and static files
+- Registered in app/__init__.py
+
+============================================================
+                    PROD STATUS
+============================================================
+
+All containers UP:
+- fypfixer-backend    Up (port 8000)
+- fypfixer-frontend   Up (port 5173)
+- fypfixer-db         Up (healthy)
+- fypfixer-redis      Up (running)
+
+Health check: PASSED
+Request logging: ACTIVE (verified with test requests)
+Admin endpoints: Protected (returns 401 without token)
+
+============================================================
+                    MIGRATION CHAIN
+============================================================
+
+20251225_ai_logs
+    ↓
+20251225_perf_idx
+    ↓
+20251225_plans_v2
+    ↓
+20251225_add_user_liked_videos
+    ↓
+20251227_analytics (analytics_events)
+    ↓
+20251227_req_logs (request_logs)
+    ↓
+20251228_metrics (metrics_daily) ← HEAD
+
+============================================================
+                    ADMIN ACCESS NOTE
+============================================================
+
+Current admin check logic:
+1. Check user.is_admin field (if exists on User model)
+2. Fallback: email ends with @fypglow.com
+
+TODO for future: Add is_admin column to users table
+
+============================================================
+                    DAY 9 PREVIEW
+============================================================
+
+Dashboard Frontend:
+- React admin dashboard consuming the 4 API endpoints
+- Funnel visualization chart
+- Step completion progress bars
+- System status indicators
+- Real-time metrics refresh
+
+============================================================
+                    READY FOR DAY 9
+============================================================
+
+Backend API complete. All 4 dashboard endpoints tested.
+Request logging active for system metrics.
+
+Day 8 deployed. Ready for Day 9.
+
+============================================================

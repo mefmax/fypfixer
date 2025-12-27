@@ -1,0 +1,85 @@
+============================================================
+         PROD CLAUDE - DAY 8 DEPLOY TASK
+============================================================
+Date: 2025-12-27
+Commit: 37555a5 feat: add admin dashboard API (Day 8)
+
+============================================================
+                    DEPLOY STEPS
+============================================================
+
+STEP 1: Pull latest code
+```bash
+cd /opt/fypfixer
+git pull origin main
+```
+
+STEP 2: Run migrations
+```bash
+docker-compose exec backend flask db upgrade
+```
+
+NOTE: If "Multiple head revisions" error:
+```bash
+docker-compose exec backend flask db stamp 20251227_req_logs
+docker-compose exec backend flask db upgrade
+```
+
+STEP 3: Rebuild backend (new middleware code)
+```bash
+docker-compose build --no-cache backend
+docker-compose up -d
+```
+
+STEP 4: Verify services
+```bash
+docker-compose ps
+docker-compose logs backend --tail=20
+```
+
+STEP 5: Health check
+```bash
+curl http://localhost:8000/api/health
+```
+
+STEP 6: Test admin endpoint (should return 401 without token)
+```bash
+curl http://localhost:8000/api/admin/metrics/overview
+```
+
+STEP 7: Verify request logging
+```bash
+docker-compose exec backend python -c "
+from app import create_app, db
+from sqlalchemy import text
+app = create_app()
+with app.app_context():
+    result = db.session.execute(text('SELECT COUNT(*) FROM request_logs'))
+    print(f'request_logs count: {result.fetchone()[0]}')
+"
+```
+
+============================================================
+                    NEW ENDPOINTS
+============================================================
+
+All require JWT + admin role:
+- GET /api/admin/metrics/overview
+- GET /api/admin/metrics/challenge
+- GET /api/admin/metrics/plans
+- GET /api/admin/metrics/system
+
+============================================================
+                    DELIVERABLE
+============================================================
+
+Report:
+1. Pull: done
+2. Migration: applied (metrics_daily table)
+3. Rebuild: done
+4. Health check: passed
+5. Request logging: active
+
+Then say: "Day 8 deployed. Ready for Day 9."
+
+============================================================
