@@ -1,36 +1,66 @@
-FYPFixer — планировщик для улучшения TikTok‑ленты.
+# FYPGlow - TikTok Detox Challenge
 
-Требования
-Требования:
+7-day challenge to reset your TikTok For You Page by training the algorithm with positive signals.
 
-Docker Desktop
+## Features
+- TikTok OAuth login
+- Personalized daily detox plans (Clear/Watch/Reinforce)
+- Block toxic creators, watch curated content
+- Track progress with streaks and analytics
+- Admin dashboard for metrics
 
-Git
+## Quick Start
 
-Windows 10/11 (опционально WSL2)
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 18+ (for frontend development)
+- Git
 
-VS Code (рекомендуется в качестве редактора)
+### Local Development
+```bash
+# Clone repository
+git clone https://github.com/mefmax/fypfixer.git
+cd fypfixer
 
-Локальный запуск
-Local setup:
+# Start backend services
+docker-compose up -d
 
-bash
-git pull
-docker compose build web
-docker compose up -d
-curl http://localhost:8000/api/plan
-Интерфейс доступен в браузере по адресу http://localhost:8000/?lang=ru
+# Start frontend (in another terminal)
+cd Frontend
+npm install
+npm run dev
+```
+Open http://localhost:5173
 
-Статус проекта
-Статус:
-
-Бэкенд и /api/plan уже работают, отдают демо‑план из базы
-
-UI показывает демо‑план на лендинге
-
-В планах — карточки нескольких видео и трекинг выполнения шагов пользователем
+### Production Build
+```bash
+cd Frontend
+npm run build
+```
 
 ## Documentation
+- [Architecture v6](FYPGLOW_ARCHITECTURE_v6.md) - System architecture, API endpoints, security
+- [Developer Handbook](DEV_HANDBOOK.md) - Code standards, git workflow, debugging
+- [Deployment Guide](DEPLOYMENT.md) - Production deployment instructions
+- [Lessons Learned](LESSONS_LEARNED.md) - Project retrospective
 
-- [Architecture v4.2](docs/FYPGLOW_ARCHITECTURE_v4.2.md) — Current architecture (API contracts, DB schema, roadmap)
-- [TikTok OAuth PKCE — Lessons Learned](docs/TIKTOK_OAUTH_PKCE_LESSONS_LEARNED.md) — Критически важно для OAuth!
+### Legacy Docs
+- [Architecture v4.2](docs/FYPGLOW_ARCHITECTURE_v4.2.md) - Previous architecture version
+- [TikTok OAuth PKCE](docs/TIKTOK_OAUTH_PKCE_LESSONS_LEARNED.md) - OAuth implementation notes
+
+## Tech Stack
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, TypeScript, Tailwind CSS, Zustand |
+| Backend | Flask 3.0, SQLAlchemy 2.0, PostgreSQL 16 |
+| Cache | Redis 7 |
+| Auth | TikTok OAuth 2.0 + PKCE, JWT |
+| Deploy | Docker, Nginx, Ubuntu 22.04 |
+
+## Project Status
+- MVP: Complete and deployed
+- Version: v2.0 (Post-MVP)
+- See [LESSONS_LEARNED.md](LESSONS_LEARNED.md) for technical debt items
+
+## License
+Proprietary - All rights reserved
