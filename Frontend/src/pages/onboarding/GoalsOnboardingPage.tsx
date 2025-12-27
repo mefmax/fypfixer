@@ -237,10 +237,23 @@ export const GoalsOnboardingPage: React.FC = () => {
               return (
                 <button
                   key={goal.id}
+                  role="checkbox"
+                  aria-checked={isSelected}
+                  aria-label={`${isSelected ? 'Deselect' : 'Select'} ${goal.title}`}
+                  aria-disabled={isDisabled}
                   onClick={() => toggleGoal(goal.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!isDisabled) {
+                        toggleGoal(goal.id);
+                      }
+                    }
+                  }}
                   disabled={isDisabled}
                   className={clsx(
                     'group relative flex items-start gap-4 rounded-xl border p-4 text-left transition-all',
+                    'focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900',
                     isSelected
                       ? 'border-orange-500 bg-orange-500/10'
                       : 'border-slate-700 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-800',
@@ -292,7 +305,7 @@ export const GoalsOnboardingPage: React.FC = () => {
         </div>
 
         {/* Selection Counter */}
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center" role="status" aria-live="polite">
           <p className="text-sm text-slate-400">
             {selectedGoals.length === 0 && 'Select at least 1 goal to continue'}
             {selectedGoals.length === 1 && '1 goal selected — you can pick up to 2 more'}
