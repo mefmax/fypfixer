@@ -1,0 +1,103 @@
+============================================================
+     PROD CLAUDE - DAY 9 BLOCK 2: TELEGRAM ALERTS
+============================================================
+Date: 2025-12-27
+Commit: (after DEV pushes)
+
+============================================================
+                TASK A: TELEGRAM BOT SETUP
+============================================================
+
+1. Create Telegram Bot via @BotFather:
+   - Message @BotFather on Telegram
+   - Send /newbot
+   - Name: FYPGlow Alerts
+   - Username: fypglow_alerts_bot (or similar)
+   - Save the bot token
+
+2. Create Alert Channel/Group:
+   - Create new Telegram group: "FYPGlow Alerts"
+   - Add the bot as admin
+   - Send a test message
+
+3. Get Chat ID:
+   - Visit: https://api.telegram.org/bot<TOKEN>/getUpdates
+   - Find chat_id in the response
+
+4. Add to .env on server:
+```bash
+cd /opt/fypfixer
+nano .env
+
+# Add these lines:
+ALERT_TELEGRAM_BOT_TOKEN=your_bot_token_here
+ALERT_TELEGRAM_CHAT_ID=your_chat_id_here
+```
+
+============================================================
+                TASK B: DEPLOY CODE
+============================================================
+
+```bash
+cd /opt/fypfixer
+git pull origin main
+
+# Rebuild backend with new alerting service
+docker-compose build --no-cache backend
+docker-compose up -d
+```
+
+============================================================
+                TASK C: TEST ALERT
+============================================================
+
+```bash
+docker-compose exec backend python -c "
+from app.services.alerting_service import alerting_service
+result = alerting_service.send_info('Test Alert', 'FYPGlow alerting system is now active!')
+print('Alert sent!' if result else 'Alert failed - check Telegram config')
+"
+```
+
+Verify message received in Telegram group.
+
+============================================================
+                TASK D: SETUP CRON
+============================================================
+
+```bash
+# Add to crontab
+crontab -e
+
+# Add this line (health check every 5 minutes):
+*/5 * * * * cd /opt/fypfixer && docker-compose exec -T backend python -c "from app.tasks.health_tasks import check_system_health; check_system_health()" >> /var/log/fypglow-health.log 2>&1
+```
+
+============================================================
+                TASK E: VERIFY CRON
+============================================================
+
+Wait 5 minutes or manually run:
+```bash
+docker-compose exec backend python -c "from app.tasks.health_tasks import check_system_health; check_system_health()"
+```
+
+Check logs:
+```bash
+docker-compose logs backend --tail=20 | grep -i health
+```
+
+============================================================
+                    DELIVERABLE
+============================================================
+
+Report:
+1. Telegram bot created: Yes/No
+2. Bot token added to .env: Yes/No
+3. Test alert received: Yes/No
+4. Cron job configured: Yes/No
+5. Health check working: Yes/No
+
+Then say: "Day 9 COMPLETE. Dashboard + Alerts live! MVP FINISHED!"
+
+============================================================
