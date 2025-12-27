@@ -6,7 +6,6 @@
  * Part of the Plan V2 3-step flow.
  */
 import React, { useState } from 'react';
-import { clsx } from 'clsx';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../common/Card';
 import { Button } from '../common/Button';
 import { usePlanStoreV2 } from '../../store/planStoreV2';

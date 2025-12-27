@@ -15,7 +15,7 @@ import { ReinforceStep } from './ReinforceStep';
 import { ShareModal } from './ShareModal';
 import { ChallengeProgress } from './ChallengeProgress';
 import { Button } from '../common/Button';
-import type { StepType } from '../../types/planV2.types';
+
 
 interface StepIndicatorProps {
   step: 1 | 2 | 3;
@@ -26,7 +26,7 @@ interface StepIndicatorProps {
 }
 
 const StepIndicator: React.FC<StepIndicatorProps> = ({
-  step,
+  step: _step,
   label,
   icon,
   isActive,
@@ -222,7 +222,7 @@ export const DailyPlanViewV2: React.FC<DailyPlanViewV2Props> = ({
   }
 
   // Get step number from current step
-  const stepNumber: 1 | 2 | 3 = currentStep === 'clear' ? 1 : currentStep === 'watch' ? 2 : 3;
+  
 
   return (
     <div className="space-y-6">
