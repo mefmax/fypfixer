@@ -6,6 +6,7 @@ import { OnboardingRoute } from './components/auth/OnboardingRoute';
 import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
 import { TermsPage, PrivacyPage } from './pages/legal';
+import { DailyPlanViewV2 } from './components/plan/DailyPlanViewV2';
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +34,14 @@ export const router = createBrowserRouter([
     element: (
       <OnboardingRoute>
         <DashboardPage />
+      </OnboardingRoute>
+    ),
+  },
+  {
+    path: '/plan',
+    element: (
+      <OnboardingRoute>
+        <DailyPlanViewV2 />
       </OnboardingRoute>
     ),
   },
