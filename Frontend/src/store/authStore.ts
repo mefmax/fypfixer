@@ -46,8 +46,9 @@ export const useAuthStore = create<AuthState>()(
           // Check onboarding status after login
           const { checkOnboardingStatus } = get();
           await checkOnboardingStatus();
-        } catch (error: any) {
-          const message = error.response?.data?.error?.message || 'Login failed';
+        } catch (error: unknown) {
+          const axiosError = error as { response?: { data?: { error?: { message?: string } } } };
+          const message = axiosError.response?.data?.error?.message || 'Login failed';
           set({ error: message, isLoading: false });
           throw new Error(message);
         }
@@ -70,8 +71,9 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
-          const message = error.response?.data?.error?.message || 'Registration failed';
+        } catch (error: unknown) {
+          const axiosError = error as { response?: { data?: { error?: { message?: string } } } };
+          const message = axiosError.response?.data?.error?.message || 'Registration failed';
           set({ error: message, isLoading: false });
           throw new Error(message);
         }

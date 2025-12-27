@@ -117,9 +117,10 @@ export const CategoryPicker: React.FC<CategoryPickerProps> = ({
 
       // Notify parent
       onCategoriesChanged?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Failed to update category:', err);
-      setError(err.response?.data?.error?.message || 'Failed to update');
+      const axiosError = err as { response?: { data?: { error?: { message?: string } } } };
+      setError(axiosError.response?.data?.error?.message || 'Failed to update');
       setTimeout(() => setError(null), 3000);
     } finally {
       setActionLoading(null);

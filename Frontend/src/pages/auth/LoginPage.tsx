@@ -18,9 +18,10 @@ export const LoginPage: React.FC = () => {
       } else {
         setError('Failed to get TikTok authorization URL');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Failed to get TikTok auth URL:', err);
-      setError(err.response?.data?.error?.message || 'Failed to connect to TikTok. Please try again.');
+      const axiosError = err as { response?: { data?: { error?: { message?: string } } } };
+      setError(axiosError.response?.data?.error?.message || 'Failed to connect to TikTok. Please try again.');
       setIsLoading(false);
     }
   };

@@ -10,6 +10,7 @@ import { GoalsOnboardingPage } from './pages/onboarding/GoalsOnboardingPage';
 import { PlanPreviewPage } from './pages/onboarding/PlanPreviewPage';
 import { TermsPage, PrivacyPage } from './pages/legal';
 import { VideoModal } from './components/video/VideoModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { loadAppConfig, validateStoredCategory } from './lib/appConfig';
 import { categoriesApi } from './api/categories.api';
 import { logger } from './lib/logger';
@@ -66,9 +67,10 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
           {/* Login page - main entry point */}
           <Route
             path="/"
@@ -126,14 +128,15 @@ function App() {
             }
           />
 
-          {/* Catch all - redirect to login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+            {/* Catch all - redirect to login */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
 
-        {/* Global components */}
-        <VideoModal />
-      </BrowserRouter>
-    </QueryClientProvider>
+          {/* Global components */}
+          <VideoModal />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

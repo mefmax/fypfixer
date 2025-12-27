@@ -2,7 +2,7 @@
  * Plans V2 API - New plan structure with Clear/Watch/Reinforce steps
  */
 import apiClient from '../lib/axios';
-import type { PlanV2, ToxicCreator } from '../types/planV2.types';
+import type { PlanV2, ToxicCreator, CuratedVideo, FavoriteVideo } from '../types/planV2.types';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -55,7 +55,7 @@ export const plansV2Api = {
   /**
    * Get curated videos for Watch step
    */
-  getCuratedVideos: async (category?: number, count = 4): Promise<ApiResponse<{ videos: any[]; count: number }>> => {
+  getCuratedVideos: async (category?: number, count = 4): Promise<ApiResponse<{ videos: CuratedVideo[]; count: number }>> => {
     const params = new URLSearchParams();
     if (category) params.append('category', String(category));
     params.append('count', String(count));
@@ -67,7 +67,7 @@ export const plansV2Api = {
   /**
    * Get user's favorites
    */
-  getFavorites: async (limit = 10): Promise<ApiResponse<{ favorites: any[]; count: number }>> => {
+  getFavorites: async (limit = 10): Promise<ApiResponse<{ favorites: FavoriteVideo[]; count: number }>> => {
     const response = await apiClient.get(`/v2/favorites?limit=${limit}`);
     return response.data;
   },
@@ -91,7 +91,7 @@ export const plansV2Api = {
   /**
    * Get random favorite for Reinforce step
    */
-  getRandomFavorite: async (): Promise<ApiResponse<{ video: any | null }>> => {
+  getRandomFavorite: async (): Promise<ApiResponse<{ video: FavoriteVideo | null }>> => {
     const response = await apiClient.get('/v2/favorites/random');
     return response.data;
   },

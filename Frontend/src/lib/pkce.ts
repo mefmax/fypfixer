@@ -2,6 +2,7 @@
  * PKCE utilities for TikTok OAuth 2.0
  * Auto-detects platform: Desktop (HEX) vs Web (Base64URL)
  */
+import { logger } from './logger';
 
 export type TikTokPlatform = 'web' | 'desktop';
 
@@ -55,7 +56,7 @@ export async function generateCodeChallenge(
     ? arrayBufferToHex(digest)      // HEX для Desktop
     : base64UrlEncode(digest);      // Base64URL для Web
 
-  console.log(`[PKCE] Platform: ${targetPlatform}, Challenge length: ${challenge.length}`);
+  logger.debug(`[PKCE] Platform: ${targetPlatform}, Challenge length: ${challenge.length}`);
   return challenge;
 }
 

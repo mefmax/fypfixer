@@ -76,9 +76,10 @@ export const TikTokCallback: React.FC = () => {
         } else {
           throw new Error('Invalid response from server');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('OAuth callback failed:', err);
-        const message = err.response?.data?.error?.message || 'Authentication failed. Please try again.';
+        const axiosError = err as { response?: { data?: { error?: { message?: string } } } };
+        const message = axiosError.response?.data?.error?.message || 'Authentication failed. Please try again.';
         setError(message);
         setIsProcessing(false);
       }

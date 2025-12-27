@@ -100,9 +100,10 @@ export const usePlanStoreV2 = create<PlanV2State>()(
           } else {
             set({ error: 'Failed to load plan', isLoading: false });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Failed to fetch plan V2:', error);
-          const message = error.response?.data?.error?.message || 'Failed to load plan';
+          const axiosError = error as { response?: { data?: { error?: { message?: string } } } };
+          const message = axiosError.response?.data?.error?.message || 'Failed to load plan';
           set({ error: message, isLoading: false });
         }
       },
